@@ -4,8 +4,8 @@ class Piece:
         self.coord = coord
         self.type = type(self).__name__
 
-        self.colorDict = {1: "w", -1: "b"}
-        self.image = f"images\{self.colorDict[color]}{self.type}.png".lower()
+        self.colorDict = {1: "White", -1: "Black"}
+        self.image = f"images\{self.colorDict[color][0]}{self.type}.png".lower()
 
     # VOID
     def updatePos(self, newCoord: tuple):
@@ -41,7 +41,7 @@ class Piece:
 
     # STR
     def __str__(self):
-        return f"{self.color} {self.type} at {self.coord}"
+        return f"{self.colorDict[self.color]} {self.type} at {self.coord}"
 
 
 class Pawn(Piece):
