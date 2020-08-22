@@ -75,16 +75,20 @@ class Game(tk.Canvas):
                 print("Select own piece")
 
         else:
+            print("Entered else block")
             if loc in self.allowed:
                 if slot.color != 0:
-                    self.captured[self.turn].append(slot)
                     self.delPiece(slot)
+                    self.captured[self.turn].append(slot)
 
                 self.delPiece(self.selected)
-                self.board[self.selected.coord]
+                self.board.move(self.selected.coord, loc)
+                self.drawPiece(self.selected)
+
+                self.resetAllowed()
 
                 self.clicked = False
-                self.turn *= 1
+                self.turn *= -1
                 self.selected = None
 
             elif slot.color == self.turn:
@@ -94,7 +98,7 @@ class Game(tk.Canvas):
                 print("Invalid move")
 
     def drawPiece(self, piece):
-        row, col = piece
+        row, col = piece.coord
 
         opened = Image.open(piece.image).resize((90, 90), Image.ANTIALIAS)
         img = ImageTk.PhotoImage(image=opened)

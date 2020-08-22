@@ -19,7 +19,12 @@ class Board:
 
         for i in range(2, 6):
             for j in range(8):
-                self.board[i][j] = Empty(0, (i, j))
+                self.board[i][j] = Empty(0)
+
+    def move(self, oldPos, newPos):
+        self[newPos] = self[oldPos]
+        self[oldPos] = Empty(0)
+        self[newPos].updatePos(newPos)
 
     def __getitem__(self, idx):
         return self.board[idx]
