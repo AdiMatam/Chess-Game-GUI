@@ -2,7 +2,7 @@ class Piece:
     def __init__(self, color: int, coord: tuple):
         self.color = color
         self.coord = coord
-        self.type = type(self).__name__
+        self.type = (type(self).__name__).lower()
 
         self.colorDict = {1: "White", -1: "Black"}
 

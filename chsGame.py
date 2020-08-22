@@ -44,12 +44,15 @@ class Game(tk.Canvas):
             x += 100
 
     def clsBoard(self):
-        """TODO: clear all pieces (have empty grid) GUI"""
-        pass
+        for i in range(8):
+            for j in range(8):
+                pce = self.board[i][j]
+                if pce.color != 0:
+                    self.delPiece(pce)
 
     def resetBoard(self):
-        self.clsBoard()
         self.board.setup()
+        self.clsBoard()
 
         for row in (0, 1, 6, 7):
             for col in range(8):
@@ -63,7 +66,7 @@ class Game(tk.Canvas):
             if slot.color == self.turn:
 
                 self.resetAllowed()
-                self.allowed = slot.getMoves(self.board)
+                self.allowed = self.board.filtedMoves(self.turn, *loc)
                 self.drawAllowed()
 
                 self.selected = slot
@@ -75,7 +78,6 @@ class Game(tk.Canvas):
                 print("Select own piece")
 
         else:
-            print("Entered else block")
             if loc in self.allowed:
                 if slot.color != 0:
                     self.delPiece(slot)
