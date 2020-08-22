@@ -5,7 +5,10 @@ class Piece:
         self.type = type(self).__name__
 
         self.colorDict = {1: "White", -1: "Black"}
-        self.image = f"images\{self.colorDict[color][0]}{self.type}.png".lower()
+        try:
+            self.image = f"images\{self.colorDict[color][0]}{self.type}.png".lower()
+        except:
+            pass
 
     # VOID
     def updatePos(self, newCoord: tuple):
@@ -170,6 +173,6 @@ class King(Piece):
         self.moved = moved
 
 
-class Empty:
-    def __init__(self, color: int):
-        self.color = color
+class Empty(Piece):
+    def __init__(self, color: int, coord: tuple):
+        super().__init__(color, coord)

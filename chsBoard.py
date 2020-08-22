@@ -1,5 +1,5 @@
 import numpy as np
-from chsPieces import *
+from chsPieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn
 
 
 class Board:
@@ -19,7 +19,7 @@ class Board:
 
         for i in range(2, 6):
             for j in range(8):
-                self.board[i][j] = Empty(0)
+                self.board[i][j] = Empty(0, (i, j))
 
     def __getitem__(self, idx):
         return self.board[idx]

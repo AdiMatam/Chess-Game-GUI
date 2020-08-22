@@ -1,6 +1,5 @@
 import tkinter as tk
-import numpy as np
-from chsPieces import *
+from chsBoard import Board
 from PIL import Image, ImageTk
 
 
@@ -11,7 +10,7 @@ class Game(tk.Canvas):
         self.bind("<Button-1>", self.handleMove)
         self.grid(row=0, column=1, rowspan=8)
 
-        self.board = np.empty((8, 8), dtype=np.object)
+        self.board = Board()
 
         self.images = set()
 
@@ -23,7 +22,7 @@ class Game(tk.Canvas):
         self.clicked = False
         self.selected = None
         self.allowed = set()
-        self.captured = {1: [], -1: []}
+        self.captured = self.captured = {1: [], -1: []}
 
         self.turn = 1
 
@@ -44,108 +43,58 @@ class Game(tk.Canvas):
                 y += 100
             x += 100
 
+    def clsBoard(self):
+        """TODO: clear all pieces (have empty grid) GUI"""
+        pass
+
     def resetBoard(self):
-        """TODO: CLEAR PIECES ON CANVAS"""
+        self.clsBoard()
+        self.board.setup()
 
-        for idx in range(8):
-            blk = (1, idx)
-            self.board[blk] = Pawn(-1, blk)
-            self.drawPiece(self.board[blk])
-
-            wht = (6, idx)
-            self.board[wht] = Pawn(1, wht)
-            self.drawPiece(self.board[wht])
-
-        row = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
-
-        for idx, Item in enumerate(row):
-            blk = (0, idx)
-            self.board[blk] = Item(-1, blk)
-            self.drawPiece(self.board[blk])
-
-            wht = (7, idx)
-            self.board[wht] = Item(1, wht)
-            self.drawPiece(self.board[wht])
-
-        for i in range(2, 6):
-            for j in range(8):
-                self.board[i][j] = Empty(0)
+        for row in (0, 1, 6, 7):
+            for col in range(8):
+                self.drawPiece(self.board[row][col])
 
     def handleMove(self, event):
-        selected = self.board[event.y // 100][event.x // 100]
+        loc = (event.y // 100, event.x // 100)
+        slot = self.board[event.y // 100][event.x // 100]
+
         if not self.clicked:
-            if selected.color == self.turn:
-                print(f"Selected {selected.type} at {selected.coord}")
-                self.selected = selected
+            if slot.color == self.turn:
 
                 self.resetAllowed()
-                self.allowed = selected.getMoves(self.board)
+                self.allowed = slot.getMoves(self.board)
                 self.drawAllowed()
 
+                self.selected = slot
                 self.clicked = True
 
-            elif selected.color == self.turn * -1:
+            elif slot.color == 0:
+                print("Empty location!")
+            else:
                 print("Select own piece")
 
-            elif selected.color == 0:
-                print("No piece at this location")
         else:
-            newPos = (event.y // 100, event.x // 100)
-            slot = self.board[newPos]
-            if newPos in self.allowed:
-                if slot.color == self.turn * -1:
-                    self.captured[self.turn].append(slot.type)
-                    print(self.captured)
+            if loc in self.allowed:
+                if slot.color != 0:
+                    self.captured[self.turn].append(slot)
                     self.delPiece(slot)
 
-                self.execMove(newPos)
-                self.isCheck()
+                self.delPiece(self.selected)
+                self.board[self.selected.coord]
 
-                if self.selected.type == "pawn" or self.selected.type == "king":
-                    self.selected.updateMoved(True)
-
-                self.selected = None
                 self.clicked = False
-
-                self.resetAllowed()
-
-                self.turn *= -1
+                self.turn *= 1
+                self.selected = None
 
             elif slot.color == self.turn:
                 self.clicked = False
                 self.handleMove(event)
-
             else:
-                print("Invalid Move")
-
-    def execMove(self, newPos):
-        self.delPiece(self.selected)
-        self.board[self.selected.coord] = Empty(0)
-
-        self.selected.updatePos(newPos)
-
-        self.drawPiece(self.selected)
-        self.board[newPos] = self.selected
-
-    def isCheck(self):
-        kingPos = None
-        myPieces = set()
-        for i in range(8):
-            for j in range(8):
-                if (
-                    type(self.board[i][j]) is King
-                    and self.board[i][j].color == self.turn * -1
-                ):
-                    kingPos = self.board[i][j].coord
-                elif self.board[i][j].color == self.turn:
-                    myPieces.add(self.board[i][j])
-
-        for pce in myPieces:
-            if kingPos in pce.getMoves(self.board):
-                print("checked")
+                print("Invalid move")
 
     def drawPiece(self, piece):
-        row, col = piece.coord
+        row, col = piece
 
         opened = Image.open(piece.image).resize((90, 90), Image.ANTIALIAS)
         img = ImageTk.PhotoImage(image=opened)
