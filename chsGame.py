@@ -22,7 +22,7 @@ class Game(tk.Canvas):
         self.clicked = False
         self.selected = None
         self.allowed = set()
-        self.captured = self.captured = {1: [], -1: []}
+        self.captured = {1: [], -1: []}
 
         self.turn = 1
 
@@ -65,11 +65,12 @@ class Game(tk.Canvas):
         if not self.clicked:
             if slot.color == self.turn:
 
+                self.selected = slot
+
                 self.resetAllowed()
                 self.allowed = self.board.filtedMoves(self.turn, *loc)
                 self.drawAllowed()
 
-                self.selected = slot
                 self.clicked = True
 
             elif slot.color == 0:
@@ -102,7 +103,9 @@ class Game(tk.Canvas):
     def drawPiece(self, piece):
         row, col = piece.coord
 
-        opened = Image.open(piece.image).resize((90, 90), Image.ANTIALIAS)
+        IMGSIZE = 80
+
+        opened = Image.open(piece.image).resize((IMGSIZE, IMGSIZE), Image.ANTIALIAS)
         img = ImageTk.PhotoImage(image=opened)
         self.images.add(img)
 

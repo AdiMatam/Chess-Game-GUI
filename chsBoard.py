@@ -12,7 +12,7 @@ class Board:
             self[1][idx] = Pawn(-1, (1, idx))
             self[6][idx] = Pawn(1, (6, idx))
 
-        row = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
+        row = (Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook)
 
         for idx, Item in enumerate(row):
             self[0][idx] = Item(-1, (0, idx))
