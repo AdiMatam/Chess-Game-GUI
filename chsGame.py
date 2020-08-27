@@ -1,6 +1,7 @@
 import tkinter as tk
 from chsBoard import Board
 from PIL import Image, ImageTk
+import numpy as np
 
 
 class Game(tk.Canvas):
@@ -11,6 +12,7 @@ class Game(tk.Canvas):
         self.grid(row=0, column=1, rowspan=8)
 
         self.board = Board()
+        self.rects = np.empty((8, 8), dtype=np.object)
 
         self.images = set()
 
@@ -31,15 +33,10 @@ class Game(tk.Canvas):
         for i in range(8):
             y = 0
             for j in range(8):
-                self.create_rectangle(
-                    x,
-                    y,
-                    x + 100,
-                    y + 100,
-                    outline="white",
-                    fill=self.theme[(i + j) % 2],
-                    tags=f"{j},{i}",
+                rect = self.create_rectangle(
+                    x, y, x + 100, y + 100, fill=self.theme[(i + j) % 2], width=0.5,
                 )
+                self.rects[j][i] = rect
                 y += 100
             x += 100
 
@@ -110,15 +107,22 @@ class Game(tk.Canvas):
         self.images.add(img)
 
         self.create_image(
-            (col * 100 + 50, row * 100 + 50),
-            image=img,
-            anchor="c",
-            tags=f"{row},{col}img",
+            (col * 100 + 50, row * 100 + 50), image=img, anchor="c",
         )
 
     def delPiece(self, piece):
         row, col = piece.coord
-        self.delete(f"{row},{col}img")
+        rPoint, cPoint = row * 100, col * 100
+
+        newRect = self.create_rectangle(
+            cPoint,
+            rPoint,
+            cPoint + 100,
+            rPoint + 100,
+            fill=self.theme[(row + col) % 2],
+            width=0.5,
+        )
+        self.rects[row][col] = newRect
 
     def drawAllowed(self):
         allowed = self.allowed
@@ -126,17 +130,22 @@ class Game(tk.Canvas):
 
         if (len(allowed)) > 0:
             for row, col in allowed:
-                self.itemconfig(f"{row},{col}", fill=self.theme[2])
+                self.itemconfig(self.rects[row][col], fill=self.theme[2])
         else:
             print("No legal moves for selected piece")
 
     def resetAllowed(self):
-        if len(self.allowed) > 0:
-            for row, col in self.allowed:
-                self.itemconfig(f"{row},{col}", fill=self.theme[(row + col) % 2])
+        for row, col in self.allowed:
+            self.itemconfig(self.rects[row][col], fill=self.theme[(row + col) % 2])
+
+
+def checkKey(event, master):
+    if event.char == "q":
+        master.destroy()
 
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.bind("<Key>", lambda e: checkKey(e, root))
     game = Game(root)
     root.mainloop()

@@ -2,11 +2,11 @@ class Piece:
     def __init__(self, color: int, coord: tuple):
         self.color = color
         self.coord = coord
-        self.type = (type(self).__name__).lower()
+        self.type = type(self).__name__
 
         self.colorDict = {1: "White", -1: "Black"}
 
-        self.image = f"images\{self.colorDict[color][0]}{self.type}.png".lower()
+        self.image = fr"images\{self.colorDict[color][0]}{self.type}.png".lower()
 
     # VOID
     def updatePos(self, newCoord: tuple):
