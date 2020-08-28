@@ -8,7 +8,8 @@ class Game(tk.Canvas):
     def __init__(self, master, theme=("#D2B48C", "#664229", "#B5D3E7")):
         super().__init__(master, width=800, height=800)
 
-        self.bind("<Button-1>", self.handleMove)
+        self.bind("<Button-1>", self.clickMove)
+
         self.grid(row=0, column=1, rowspan=8)
 
         self.board = Board()
@@ -45,7 +46,7 @@ class Game(tk.Canvas):
             for j in range(8):
                 pce = self.board[i][j]
                 if pce.color != 0:
-                    self.delPiece(pce)
+                    self.rmvPiece(pce)
 
     def resetBoard(self):
         self.board.setup()
@@ -53,11 +54,11 @@ class Game(tk.Canvas):
 
         for row in (0, 1, 6, 7):
             for col in range(8):
-                self.drawPiece(self.board[row][col])
+                self.putPiece(self.board[row][col])
 
-    def handleMove(self, event):
+    def clickMove(self, event):
         loc = (event.y // 100, event.x // 100)
-        slot = self.board[event.y // 100][event.x // 100]
+        slot = self.board[loc]
 
         if not self.clicked:
             if slot.color == self.turn:
@@ -78,14 +79,17 @@ class Game(tk.Canvas):
         else:
             if loc in self.allowed:
                 if slot.color != 0:
-                    self.delPiece(slot)
+                    self.rmvPiece(slot)
                     self.captured[self.turn].append(slot)
 
-                self.delPiece(self.selected)
+                self.rmvPiece(self.selected)
                 self.board.move(self.selected.coord, loc)
-                self.drawPiece(self.selected)
+                self.putPiece(self.selected)
 
                 self.resetAllowed()
+
+                if self.selected.type == "Pawn" or self.selected.type == "King":
+                    self.selected.updateMoved(True)
 
                 self.clicked = False
                 self.turn *= -1
@@ -93,11 +97,11 @@ class Game(tk.Canvas):
 
             elif slot.color == self.turn:
                 self.clicked = False
-                self.handleMove(event)
+                self.clickMove(event)
             else:
                 print("Invalid move")
 
-    def drawPiece(self, piece):
+    def putPiece(self, piece):
         row, col = piece.coord
 
         IMGSIZE = 80
@@ -107,10 +111,10 @@ class Game(tk.Canvas):
         self.images.add(img)
 
         self.create_image(
-            (col * 100 + 50, row * 100 + 50), image=img, anchor="c",
+            (col * 100 + 50, row * 100 + 50), image=img, anchor=tk.CENTER,
         )
 
-    def delPiece(self, piece):
+    def rmvPiece(self, piece):
         row, col = piece.coord
         rPoint, cPoint = row * 100, col * 100
 
@@ -139,13 +143,7 @@ class Game(tk.Canvas):
             self.itemconfig(self.rects[row][col], fill=self.theme[(row + col) % 2])
 
 
-def checkKey(event, master):
-    if event.char == "q":
-        master.destroy()
-
-
 if __name__ == "__main__":
     root = tk.Tk()
-    root.bind("<Key>", lambda e: checkKey(e, root))
     game = Game(root)
     root.mainloop()

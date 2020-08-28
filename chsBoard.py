@@ -39,6 +39,8 @@ class Board:
                     moves.remove(move)
                 self.board[row][col] = self.board[move]
 
+        if moves is None:
+            return set()
         return moves
 
     # VOID
