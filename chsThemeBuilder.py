@@ -30,11 +30,11 @@ class RGB(tk.Tk):
 
     @staticmethod
     def toHex(colors: tuple):
-        string = "#"
+        string = ["#"]
         for value in colors:
-            string += format(value, "02x")
+            string.append(format(value, "02x"))
 
-        return string
+        return "".join(string)
 
 
 RGB().mainloop()

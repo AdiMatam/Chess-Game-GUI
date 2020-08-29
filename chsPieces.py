@@ -70,7 +70,11 @@ class Pawn(Piece):
 
         double = (row + (self.color * -2), col)  # coordinates for pawn-double-step
 
-        if board[double].color == 0 and not self.moved:
+        if (
+            board[double].color == 0
+            and board[nextRow][col].color == 0
+            and not self.moved
+        ):
             allowed.add(double)
 
         return allowed
@@ -164,6 +168,8 @@ class King(Piece):
                 if self.checkBound(rIdx, cIdx):
                     if board[rIdx][cIdx].color != self.color:
                         allowed.add((rIdx, cIdx))
+
+        return allowed
 
         # CASTLE
 

@@ -66,7 +66,7 @@ class Game(tk.Canvas):
                 self.selected = slot
 
                 self.resetAllowed()
-                self.allowed = self.board.filtedMoves(self.turn, *loc)
+                self.allowed = slot.getMoves(self.board)
                 self.drawAllowed()
 
                 self.clicked = True
@@ -131,7 +131,6 @@ class Game(tk.Canvas):
     def drawAllowed(self):
         allowed = self.allowed
         print(allowed)
-
         if (len(allowed)) > 0:
             for row, col in allowed:
                 self.itemconfig(self.rects[row][col], fill=self.theme[2])
