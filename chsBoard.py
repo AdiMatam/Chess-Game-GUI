@@ -5,8 +5,6 @@ from chsPieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn
 class Board:
     def __init__(self):
         self.board = np.empty((8, 8), dtype=np.object)
-        self.curPieces = set()
-        self.kingPos = None
 
     def setup(self):
         for idx in range(8):
@@ -23,17 +21,10 @@ class Board:
             for j in range(8):
                 self[i][j] = Empty(0)
 
-    # VOID
     def move(self, oldPos, newPos):
         self[newPos] = self[oldPos]
         self[oldPos] = Empty(0)
         self[newPos].updatePos(newPos)
-
-    def updateCheck(self):
-        pass
-
-    def toggleTurn(self):
-        self.turn *= -1
 
     def __getitem__(self, idx):
         return self.board[idx]
