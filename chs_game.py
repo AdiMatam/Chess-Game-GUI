@@ -53,7 +53,6 @@ class Game:
         if rowcol in self.allowed:
             fro = self.to_xy(*self.selected.coord)
 
-            self.animate(fro, (x, y))
             self.board.move(self.selected.coord, rowcol)
             self.reset_allowed()
             self.turn *= 1
@@ -68,18 +67,21 @@ class Game:
             print("Invalid Move")
             return True
 
-    def animate(self, fro: tuple, to: tuple):
-        x1, y1 = fro
-        x2, y2 = to
+    # def animate(self, fro: tuple, to: tuple):
+    #     x1, y1 = fro
+    #     x2, y2 = to
 
-        slope = (y2 - y1) / (x2 - x1)
-        while True:
-            if abs(x2 - x1) < 10 and abs(y2 - y1) < 10:
-                return
-            x1 += 1
-            y1 += slope
-            self.draw_piece(self.selected, x1, y1)
-            pygame.display.update()
+    #     slope = (y2 - y1) / (x2 - x1)
+    #     xsign = int((x2 - x1) / abs(x2 - x1))
+    #     ysign = int((y2 - y1) / abs(y2 - y1))
+    #     print(xsign, ysign)
+    #     while True:
+    #         if abs(x2 - x1) < 10 and abs(y2 - y1) < 10:
+    #             return
+    #         x1 += 1 * xsign
+    #         y1 += slope * ysign
+    #         self.draw_piece(self.selected, x1, y1)
+    #         pygame.display.update()
 
     def reset_allowed(self):
         for row, col in self.allowed:
