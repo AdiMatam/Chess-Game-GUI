@@ -5,6 +5,7 @@ from chs_pieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn
 class Board:
     def __init__(self):
         self.board = np.empty((8, 8), dtype=np.object)
+        self.setup()
 
     def setup(self):
         for idx in range(8):
@@ -24,7 +25,10 @@ class Board:
     def move(self, oldPos, newPos):
         self[newPos] = self[oldPos]
         self[oldPos] = Empty(0)
-        self[newPos].updatePos(newPos)
+        self[newPos].set_pos(newPos)
+
+    def has_piece(self, row, col):
+        return not isinstance(self[row][col], Empty)
 
     def __getitem__(self, idx):
         return self.board[idx]

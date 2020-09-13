@@ -1,3 +1,6 @@
+from pygame.image import load
+
+
 class Piece:
     def __init__(self, color: int, coord: tuple):
         self.color = color
@@ -6,20 +9,20 @@ class Piece:
 
         self.colorDict = {1: "White", -1: "Black"}
 
-        self.image = fr"images\{self.colorDict[color][0]}{self.type}.png".lower()
+        self.image = load(fr"images\{self.colorDict[color][0]}{self.type}.png".lower())
 
     # VOID
-    def updatePos(self, newCoord: tuple):
+    def set_pos(self, newCoord: tuple):
         self.coord = newCoord
 
     # BOOLEAN
-    def checkBound(self, x, y):
+    def check_bound(self, x, y):
         if 0 <= x < 8 and 0 <= y < 8:
             return True
         return False
 
     # SET <TUPLE>
-    def applyMuls(self, board, rowMul, colMul):
+    def apply_muls(self, board, rowMul, colMul):
         currentMoves = set()
         step = 0
         row, col = self.coord
@@ -28,7 +31,7 @@ class Piece:
             newRow = row + (rowMul * step)
             newCol = col + (colMul * step)
 
-            if self.checkBound(newRow, newCol):
+            if self.check_bound(newRow, newCol):
                 if (color := board[newRow][newCol].color) != self.color:
                     currentMoves.add((newRow, newCol))
                     if color == self.color * -1:
@@ -50,7 +53,7 @@ class Pawn(Piece):
         super().__init__(color, coord)
         self.moved = False
 
-    def getMoves(self, board):
+    def get_moves(self, board):
         allowed = set()
         row, col = self.coord
 
@@ -87,12 +90,12 @@ class Bishop(Piece):
     def __init__(self, color, coord: tuple):
         super().__init__(color, coord)
 
-    def getMoves(self, board):
+    def get_moves(self, board):
         allowed = set()
 
         for rowMul in (-1, 1):
             for colMul in (-1, 1):
-                moveSet = self.applyMuls(board, rowMul, colMul)
+                moveSet = self.apply_muls(board, rowMul, colMul)
                 allowed.update(moveSet)
 
         return allowed
@@ -102,7 +105,7 @@ class Knight(Piece):
     def __init__(self, color, coord: tuple):
         super().__init__(color, coord)
 
-    def getMoves(self, board):
+    def get_moves(self, board):
         allowed = set()
         row, col = self.coord
 
@@ -111,7 +114,7 @@ class Knight(Piece):
         for i in range(2):
             for r in (row + add[i], row - add[i]):
                 for c in (col + add[i ^ 1], col - add[i ^ 1]):
-                    if self.checkBound(r, c):
+                    if self.check_bound(r, c):
                         if board[r][c].color != self.color:
                             allowed.add((r, c))
 
@@ -122,14 +125,14 @@ class Rook(Piece):
     def __init__(self, color, coord: tuple):
         super().__init__(color, coord)
 
-    def getMoves(self, board):
+    def get_moves(self, board):
         allowed = set()
 
         for rowMul in range(-1, 2):
             for colMul in range(-1, 2):
                 if abs(rowMul) == abs(colMul):
                     continue
-                moveSet = self.applyMuls(board, rowMul, colMul)
+                moveSet = self.apply_muls(board, rowMul, colMul)
                 allowed.update(moveSet)
 
         return allowed
@@ -139,12 +142,12 @@ class Queen(Piece):
     def __init__(self, color, coord: tuple):
         super().__init__(color, coord)
 
-    def getMoves(self, board):
+    def get_moves(self, board):
         allowed = set()
 
         for rowMul in range(-1, 2):
             for colMul in range(-1, 2):
-                moveSet = self.applyMuls(board, rowMul, colMul)
+                moveSet = self.apply_muls(board, rowMul, colMul)
                 allowed.update(moveSet)
 
         return allowed
@@ -157,7 +160,7 @@ class King(Piece):
         self.moved = False
         self.checked = False
 
-    def getMoves(self, board):
+    def get_moves(self, board):
         allowed = set()
         row, col = self.coord
 
@@ -165,7 +168,7 @@ class King(Piece):
             for c in range(-1, 2):
                 rIdx = row + r
                 cIdx = col + c
-                if self.checkBound(rIdx, cIdx):
+                if self.check_bound(rIdx, cIdx):
                     if board[rIdx][cIdx].color != self.color:
                         allowed.add((rIdx, cIdx))
 

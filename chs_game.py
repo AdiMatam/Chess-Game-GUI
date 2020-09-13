@@ -1,151 +1,160 @@
-import tkinter as tk
+import pygame
+from pygame.locals import QUIT, MOUSEBUTTONDOWN
+
 from chs_board import Board
-from PIL import Image, ImageTk
+from chs_themes import themes
+from chs_const import *
 import numpy as np
 
 
-class Game(tk.Canvas):
-    def __init__(self, master, theme=("#D2B48C", "#664229", "#B5D3E7")):
-        super().__init__(master, width=800, height=800)
+class Game:
+    player = {"WHITE": 1, "BLACK": -1}
 
-        self.bind("<Button-1>", self.handle_move)
-
-        self.grid(row=0, column=1, rowspan=8)
-
+    def __init__(self, window, theme="Traditional", first="WHITE"):
+        self.window = window
         self.board = Board()
-        self.rects = np.empty((8, 8), dtype=np.object)
+        self.turn = Game.player.get(first.upper())
+        self.theme = themes.get(theme.lower())
 
-        self.images = set()
-
-        self.theme = theme
-
-        self.draw_board()
-        self.reset_board()
-
-        self.clicked = False
         self.selected = None
         self.allowed = set()
         self.captured = {1: [], -1: []}
-
-        self.turn = 1
+        self.update_set = set()
 
     def draw_board(self):
         x = 0
-        for i in range(8):
+        for col in range(8):
             y = 0
-            for j in range(8):
-                rect = self.create_rectangle(
-                    x, y, x + 100, y + 100, fill=self.theme[(i + j) % 2], width=0.5,
-                )
-                self.rects[j][i] = rect
-                y += 100
-            x += 100
+            for row in range(8):
+                self.make_rect(self.theme[(row + col) % 2], (x, y, BOX, BOX))
+                if self.board.has_piece(row, col):
+                    self.draw_piece(self.board[row][col], x + HFBOX, y + HFBOX)
+                y += BOX
+            x += BOX
 
-    def cls_board(self):
-        for i in range(8):
-            for j in range(8):
-                pce = self.board[i][j]
-                if pce.color != 0:
-                    self.rmv_piece(pce)
+    def select_piece(self, x, y):
+        row, col = self.to_rowcol(x, y)
+        print(row, col)
+        if self.board.has_piece(row, col) and self.board[row][col].color == self.turn:
+            self.selected = self.board[row][col]
+            self.hilite_selected(row, col)
 
-    def reset_board(self):
-        self.board.setup()
-        self.cls_board()
-
-        for row in (0, 1, 6, 7):
-            for col in range(8):
-                self.put_piece(self.board[row][col])
-
-    def handle_move(self, event):
-        loc = (event.y // 100, event.x // 100)
-        slot = self.board[loc]
-
-        if not self.clicked:
-            if slot.color == self.turn:
-                self.do_select(loc, slot)
-            elif slot.color == 0:
-                print("Empty location!")
-            else:
-                print("Select own piece")
+            self.reset_allowed()
+            self.allowed = self.selected.get_moves(self.board)
+            self.draw_allowed()
+            return True
 
         else:
-            if loc in self.allowed:
-                self.do_move(loc, slot)
-            elif slot.color == self.turn:
-                self.clicked = False
-                self.handle_move(event)
-            else:
-                print("Invalid move")
+            print("Invalid Selection")
+            return False
 
-    def do_select(self, loc, slot):
-        self.selected = slot
+    def move_piece(self, x, y):
+        rowcol = self.to_rowcol(x, y)
+        if rowcol in self.allowed:
+            fro = self.to_xy(*self.selected.coord)
 
-        self.reset_allowed()
-        self.allowed = slot.getMoves(self.board)
-        self.draw_allowed()
+            self.animate(fro, (x, y))
+            self.board.move(self.selected.coord, rowcol)
+            self.reset_allowed()
+            self.turn *= 1
 
-        self.clicked = True
+            return False
 
-    def do_move(self, loc, slot):
-        if slot.color != 0:
-            self.rmv_piece(slot)
-            self.captured[self.turn].append(slot)
+        elif self.board[rowcol].color == self.turn:
+            self.select_piece(x, y)
+            return False
 
-        self.rmv_piece(self.selected)
-        self.board.move(self.selected.coord, loc)
-        self.put_piece(self.selected)
-
-        self.reset_allowed()
-
-        if self.selected.type == "Pawn" or self.selected.type == "King":
-            self.selected.updateMoved(True)
-
-        self.clicked = False
-        self.turn *= -1
-        self.selected = None
-
-    def put_piece(self, piece):
-        row, col = piece.coord
-
-        IMGSIZE = 80
-
-        opened = Image.open(piece.image).resize((IMGSIZE, IMGSIZE), Image.ANTIALIAS)
-        img = ImageTk.PhotoImage(image=opened)
-        self.images.add(img)
-
-        self.create_image(
-            (col * 100 + 50, row * 100 + 50), image=img, anchor=tk.CENTER,
-        )
-
-    def rmv_piece(self, piece):
-        row, col = piece.coord
-        rPoint, cPoint = row * 100, col * 100
-
-        newRect = self.create_rectangle(
-            cPoint,
-            rPoint,
-            cPoint + 100,
-            rPoint + 100,
-            fill=self.theme[(row + col) % 2],
-            width=0.5,
-        )
-        self.rects[row][col] = newRect
-
-    def draw_allowed(self):
-        allowed = self.allowed
-        print(allowed)
-        if (len(allowed)) > 0:
-            for row, col in allowed:
-                self.itemconfig(self.rects[row][col], fill=self.theme[2])
         else:
-            print("No legal moves for selected piece")
+            print("Invalid Move")
+            return True
+
+    def animate(self, fro: tuple, to: tuple):
+        x1, y1 = fro
+        x2, y2 = to
+
+        slope = (y2 - y1) / (x2 - x1)
+        while True:
+            if abs(x2 - x1) < 10 and abs(y2 - y1) < 10:
+                return
+            x1 += 1
+            y1 += slope
+            self.draw_piece(self.selected, x1, y1)
+            pygame.display.update()
 
     def reset_allowed(self):
         for row, col in self.allowed:
-            self.itemconfig(self.rects[row][col], fill=self.theme[(row + col) % 2])
+            x, y = self.to_xy(row, col)
+            color = self.theme[(row + col) % 2]
+            self.update_set.add(self.make_rect(color, (x, y, BOX, BOX)))
+
+    def draw_allowed(self):
+        for row, col in self.allowed:
+            x, y = self.to_xy(row, col)
+            rX = x + HFBOX - LEGALBOX // 2
+            rY = y + HFBOX - LEGALBOX // 2
+            self.update_set.add(
+                self.make_rect(self.theme[2], (rX, rY, LEGALBOX, LEGALBOX))
+            )
+
+    def hilite_selected(self, row, col):
+        x, y = self.to_xy(row, col)
+        self.update_set.add(self.make_rect(self.theme[2], (x, y, BOX, BOX)))
+
+        circColor = self.theme[(row + col) % 2]
+        pygame.draw.circle(self.window, circColor, (x + HFBOX, y + HFBOX), RADIUS)
+        self.draw_piece(self.selected, x + HFBOX, y + HFBOX)
+
+    def draw_piece(self, piece, x, y):
+        offset = IMGSIZE // 2
+        self.window.blit(piece.image, (int(x - offset), int(y - offset)))
+
+    def make_rect(self, color: tuple, rect_params: tuple):
+        pygame.draw.rect(self.window, color, rect_params)
+        return rect_params
+
+    @staticmethod
+    def to_rowcol(x, y):
+        return (y // BOX, x // BOX)
+
+    @staticmethod
+    def to_xy(row, col):
+        return (col * BOX, row * BOX)
 
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    game = Game(root)
-    root.mainloop()
+def update_screen(rect=None):
+    if rect:
+        pygame.display.update(rect)
+    else:
+        pygame.display.update()
+
+
+pygame.init()
+win = pygame.display.set_mode((WIDTH, HEIGHT))
+
+game = Game(win)
+game.draw_board()
+update_screen()
+
+# VARS
+run = True
+clicked = False
+#
+
+# MAINLOOP
+while run:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            run = False
+        if event.type == MOUSEBUTTONDOWN:
+            game.update_set.clear()
+            mousePos = pygame.mouse.get_pos()
+            if not clicked:
+                clicked = game.select_piece(*mousePos)
+            else:
+                clicked = game.move_piece(*mousePos)
+
+    for rect in game.update_set:
+        update_screen(pygame.Rect(rect))
+#
+
+pygame.quit()
