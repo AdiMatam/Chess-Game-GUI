@@ -109,8 +109,7 @@ class Game(tk.Canvas):
 
         IMGSIZE = 80
 
-        opened = Image.open(piece.image).resize((IMGSIZE, IMGSIZE), Image.ANTIALIAS)
-        img = ImageTk.PhotoImage(image=opened)
+        img = ImageTk.PhotoImage(image=piece.image)
         self.images.add(img)
 
         self.create_image(

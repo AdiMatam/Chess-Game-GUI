@@ -1,3 +1,6 @@
+from PIL import Image
+
+
 class Piece:
     def __init__(self, color: int, coord: tuple):
         self.color = color
@@ -6,7 +9,9 @@ class Piece:
 
         self.colorDict = {1: "White", -1: "Black"}
 
-        self.image = fr"images\{self.colorDict[color][0]}{self.type}.png".lower()
+        self.image = Image.open(
+            fr"images\{self.colorDict[color][0]}{self.type}.png".lower()
+        )
 
     # VOID
     def updatePos(self, newCoord: tuple):
