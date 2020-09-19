@@ -28,7 +28,7 @@ class Board:
         self[newPos].set_pos(newPos)
 
     def has_piece(self, row, col):
-        return not isinstance(self[row][col], Empty)
+        return not isinstance(self[int(row)][int(col)], Empty)
 
     def __getitem__(self, idx):
         return self.board[idx]
