@@ -1,7 +1,9 @@
 # Chess-Game-GUI
-Chess game designed on tkinter Canvas.   Currently a Work-In-Progress. For example, 'checks' have not been implemented fully yet.  
+Chess game designed on pygame.   Currently a Work-In-Progress. For example, 'checks' have not been implemented fully yet.  
 
-Legal moves and capturing is fully functional. Captured pieces are stored, but not yet drawn.
+Legal moves and capturing is fully functional. Captured pieces are stored, but not yet shown.  
+
+Movement of pieces is now animated. Instead of disappearing and appearing in new place, piece moves across the board.
 
 ## Dependencies
 Pygame: Graphics platorm (pip install pygame)
