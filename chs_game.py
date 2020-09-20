@@ -4,7 +4,6 @@ from pygame.locals import QUIT, MOUSEBUTTONDOWN
 from chs_board import Board
 from chs_themes import themes
 from chs_const import *
-import numpy as np
 
 
 class Game:
@@ -19,12 +18,13 @@ class Game:
         self.reset_board()
 
         self.selected = None
+        self.clicked = False
         self.allowed = set()
         self.captured = {1: [], -1: []}
 
     def square(self, x, y, size, color=None):
         if color:
-            pygame.draw.rect(self.window, color, (x, y, size, size))
+            pygame.draw.rect(self.window, color, (int(x), int(y), size, size))
         else:
             row, col = self.to_rowcol(x, y)
             pygame.draw.rect(
@@ -56,22 +56,22 @@ class Game:
         row, col = self.to_rowcol(x, y)
         if self.board.has_piece(row, col) and self.board[row][col].color == self.turn:
             self.selected = self.board[row][col]
-            # self.hilite_selected(*self.to_xy(row, col))
+            self.hilite_selected(*self.to_xy(row, col))
 
             self.reset_allowed()
             self.allowed = self.selected.get_moves(self.board)
             self.draw_allowed()
-            return True
+
+            self.clicked = True
 
         else:
             print("Invalid Selection")
-            return False
 
-    # def hilite_selected(self, x, y):
-    #     self.square(x, y, BOX, self.theme[2])
-    #     circColor = self.theme[sum(self.to_rowcol(x, y)) % 2]
-    #     pygame.draw.circle(self.window, circColor, (x + HFBOX, y + HFBOX), RADIUS)
-    #     self.draw_piece(self.selected, x, y)
+    def hilite_selected(self, x, y):
+        self.square(x, y, BOX, self.theme[2])
+        circColor = self.theme[sum(self.to_rowcol(x, y)) % 2]
+        pygame.draw.circle(self.window, circColor, (x + HFBOX, y + HFBOX), RADIUS)
+        self.draw_piece(self.selected, x, y)
 
     def move_piece(self, x, y):
         self.reset_allowed()
@@ -79,26 +79,29 @@ class Game:
         pce = self.board[row][col]
 
         if (row, col) in self.allowed:
-            if pce.color != 0:
-                self.cover_piece(pce)
-                self.captured.get(self.turn).append(pce)
-
             self.draw_along_path(
                 self.selected, self.to_xy(*self.selected.coord), self.to_xy(row, col)
             )
+            if pce.color != 0:
+                self.cover_piece(pce)
+                self.draw_piece(self.selected, *self.to_xy(row, col))
+                self.captured.get(self.turn).append(pce)
+
             self.board.move(self.selected.coord, (row, col))
 
             if self.selected.type == "Pawn" or self.selected.type == "King":
                 self.selected.updateMoved(True)
 
             self.turn *= -1
-            return False
+            self.clicked = False
 
         elif pce.color == self.turn:
+            self.cover_piece(self.selected)
+            self.draw_piece(self.selected, *self.to_xy(*self.selected.coord))
             self.select_piece(x, y)
+
         else:
             print("Invalid selection")
-            return True
 
     def draw_along_path(self, piece, fro: tuple, to: tuple):
         x1, y1 = fro
@@ -113,7 +116,7 @@ class Game:
         if xdiff == 0:
             abslope = 1
         else:
-            abslope = abs((ydiff) / (xdiff))
+            abslope = abs(ydiff / xdiff)
 
         while x1 != x2 or y1 != y2:
             x1 += dirx
@@ -121,7 +124,11 @@ class Game:
             self.redraw_neighbors(x1, y1)
             self.draw_piece(piece, x1, y1)
             pygame.display.update()
-            pygame.time.delay(5)
+            pygame.time.delay(2)
+
+    def get_distance(self, dx, dy):
+        dist = (dx ** 2 + dy ** 2) ** (1 / 2)
+        return abs(dist)
 
     def redraw_neighbors(self, x, y):
         row, col = self.to_rowcol(x, y)
@@ -140,7 +147,8 @@ class Game:
         if len(self.allowed) > 0:
             for row, col in self.allowed:
                 x, y = self.to_xy(row, col)
-                self.square(x, y, BOX, self.theme[2])
+                shrink = 20
+                self.square(x + shrink, y + shrink, BOX - shrink * 2, self.theme[2])
                 if self.board.has_piece(row, col):
                     self.draw_piece(self.board[row][col], *self.to_xy(row, col))
         else:
@@ -148,8 +156,10 @@ class Game:
 
     def reset_allowed(self):
         for row, col in self.allowed:
-            if not self.board.has_piece(row, col):
-                self.square(*self.to_xy(row, col), BOX)
+            x, y = self.to_xy(row, col)
+            self.square(*self.to_xy(row, col), BOX)
+            if self.board.has_piece(row, col):
+                self.draw_piece(self.board[row][col], x, y)
 
     @staticmethod
     def to_rowcol(x, y):
@@ -160,37 +170,32 @@ class Game:
         return (col * BOX, row * BOX)
 
 
-def update_screen(rect=None):
-    if rect:
-        pygame.display.update(rect)
-    else:
-        pygame.display.update()
-
-
 pygame.init()
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 
 game = Game(win)
-update_screen()
+pygame.display.update()
 
 # VARS
 run = True
-clicked = False
 #
 
 # MAINLOOP
 while run:
+    update = False
     for event in pygame.event.get():
         if event.type == QUIT:
             run = False
         if event.type == MOUSEBUTTONDOWN:
             mx, my = pygame.mouse.get_pos()
-            if not clicked:
-                clicked = game.select_piece(mx, my)
+            update = True
+            if not game.clicked:
+                game.select_piece(mx, my)
             else:
-                clicked = game.move_piece(mx, my)
+                game.move_piece(mx, my)
 
-    update_screen()
+    if update:
+        pygame.display.update()
 #
 
 pygame.quit()

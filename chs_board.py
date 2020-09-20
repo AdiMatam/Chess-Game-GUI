@@ -1,11 +1,10 @@
 import numpy as np
-from chs_pieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn
+from chs_pieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn, Piece
 
 
 class Board:
     def __init__(self):
         self.board = np.empty((8, 8), dtype=np.object)
-        self.setup()
 
     def setup(self):
         for idx in range(8):
@@ -28,16 +27,13 @@ class Board:
         self[newPos].set_pos(newPos)
 
     def has_piece(self, row, col):
-        return not isinstance(self[int(row)][int(col)], Empty)
+        return isinstance(self[int(row)][int(col)], Piece)
 
     def __getitem__(self, idx):
         return self.board[idx]
 
     def __setitem__(self, idx, value):
         self.board[idx] = value
-
-    def __repr__(self):
-        return f"{self.__module__}{type(self).__name__} object at {hex(id(self))}"
 
     def __str__(self):
         return np.array2string(self.board)
