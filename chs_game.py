@@ -6,30 +6,21 @@ from chs_themes import themes
 from chs_const import *
 
 
-class Game:
-    player = {"WHITE": 1, "BLACK": -1}
-
+class Game(Board):
     def __init__(self, window, theme="Traditional", first="WHITE"):
+        super().__init__(first)
         self.window = window
-        self.board = Board()
-        self.turn = Game.player.get(first.upper())
         self.theme = themes.get(theme.lower())
 
         self.reset_board()
-
-        self.selected = None
         self.clicked = False
-        self.allowed = set()
-        self.captured = {1: [], -1: []}
 
     def square(self, x, y, size, color=None):
         if color:
             pygame.draw.rect(self.window, color, (int(x), int(y), size, size))
         else:
-            row, col = self.to_rowcol(x, y)
-            pygame.draw.rect(
-                self.window, self.theme[(int(row) + int(col)) % 2], (int(x), int(y), size, size)
-            )
+            rowcol = int(sum(self.to_rowcol(x, y)))
+            pygame.draw.rect(self.window, self.theme[rowcol % 2], (int(x), int(y), size, size))
 
     def draw_board(self):
         for x in range(0, 800, 100):
@@ -38,11 +29,11 @@ class Game:
 
     def reset_board(self):
         self.draw_board()
-        self.board.setup()
+        self.setup()
 
         for row in (0, 1, 6, 7):
             for col in range(8):
-                pce = self.board[row][col]
+                pce = self.piece_at(row, col)
                 self.draw_piece(pce, *self.to_xy(*pce.coord))
 
     def draw_piece(self, piece, x, y):
@@ -54,12 +45,12 @@ class Game:
 
     def select_piece(self, x, y):
         row, col = self.to_rowcol(x, y)
-        if self.board.has_piece(row, col) and self.board[row][col].color == self.turn:
-            self.selected = self.board[row][col]
+        if self.has_piece(row, col) and self.is_mine(row, col):
+            self.set_selected(self.piece_at(row, col))
             self.hilite_selected(*self.to_xy(row, col))
 
             self.reset_allowed()
-            self.allowed = self.selected.get_moves(self.board)
+            self.store_allowed()
             self.draw_allowed()
 
             self.clicked = True
@@ -76,7 +67,7 @@ class Game:
     def move_piece(self, x, y):
         self.reset_allowed()
         row, col = self.to_rowcol(x, y)
-        pce = self.board[row][col]
+        pce = self.piece_at(row, col)
 
         if (row, col) in self.allowed:
             self.draw_along_path(
@@ -87,12 +78,12 @@ class Game:
                 self.draw_piece(self.selected, *self.to_xy(row, col))
                 self.captured.get(self.turn).append(pce)
 
-            self.board.move(self.selected.coord, (row, col))
+            self.move(self.selected.coord, (row, col))
 
             if self.selected.type == "Pawn" or self.selected.type == "King":
                 self.selected.updateMoved(True)
 
-            self.turn *= -1
+            self.switch_turn()
             self.clicked = False
 
         elif pce.color == self.turn:
@@ -135,13 +126,13 @@ class Game:
 
         for rShift in (-1, 0, 1):
             for cShift in (-1, 0, 1):
-                nRow = row + rShift
-                nCol = col + cShift
+                nRow = int(row + rShift)
+                nCol = int(col + cShift)
                 if 0 <= nRow <= 7 and 0 <= nCol <= 7:
                     x, y = self.to_xy(nRow, nCol)
                     self.square(x, y, BOX)
-                    if self.board.has_piece(nRow, nCol) and self.selected.coord != (nRow, nCol):
-                        self.draw_piece(self.board[int(nRow)][int(nCol)], x, y)
+                    if self.has_piece(nRow, nCol) and self.selected.coord != (nRow, nCol):
+                        self.draw_piece(self.piece_at(nRow, nCol), x, y)
 
     def draw_allowed(self):
         if len(self.allowed) > 0:
@@ -149,8 +140,8 @@ class Game:
                 x, y = self.to_xy(row, col)
                 shrink = 20
                 self.square(x + shrink, y + shrink, BOX - shrink * 2, self.theme[2])
-                if self.board.has_piece(row, col):
-                    self.draw_piece(self.board[row][col], *self.to_xy(row, col))
+                if self.has_piece(row, col):
+                    self.draw_piece(self.piece_at(row, col), *self.to_xy(row, col))
         else:
             print("No legal moves for selected piece")
 
@@ -158,8 +149,8 @@ class Game:
         for row, col in self.allowed:
             x, y = self.to_xy(row, col)
             self.square(*self.to_xy(row, col), BOX)
-            if self.board.has_piece(row, col):
-                self.draw_piece(self.board[row][col], x, y)
+            if self.has_piece(row, col):
+                self.draw_piece(self.piece_at(row, col), x, y)
 
     @staticmethod
     def to_rowcol(x, y):
@@ -187,12 +178,12 @@ while run:
         if event.type == QUIT:
             run = False
         if event.type == MOUSEBUTTONDOWN:
-            mx, my = pygame.mouse.get_pos()
+            mouse = pygame.mouse.get_pos()
             update = True
             if not game.clicked:
-                game.select_piece(mx, my)
+                game.select_piece(*mouse)
             else:
-                game.move_piece(mx, my)
+                game.move_piece(*mouse)
 
     if update:
         pygame.display.update()

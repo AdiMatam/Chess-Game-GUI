@@ -3,38 +3,50 @@ from chs_pieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn, Piece
 
 
 class Board:
-    def __init__(self):
+    player = {"WHITE": 1, "BLACK": -1}
+
+    def __init__(self, first: str):
         self.board = np.empty((8, 8), dtype=np.object)
+        self.turn = Board.player.get(first)
+
+        self.selected = None
+        self.allowed = set()
+        self.captured = {1: [], -1: []}
 
     def setup(self):
         for idx in range(8):
-            self[1][idx] = Pawn(-1, (1, idx))
-            self[6][idx] = Pawn(1, (6, idx))
+            self.board[1][idx] = Pawn(-1, (1, idx))
+            self.board[6][idx] = Pawn(1, (6, idx))
 
         row = (Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook)
 
         for idx, Item in enumerate(row):
-            self[0][idx] = Item(-1, (0, idx))
-            self[7][idx] = Item(1, (7, idx))
+            self.board[0][idx] = Item(-1, (0, idx))
+            self.board[7][idx] = Item(1, (7, idx))
 
         for i in range(2, 6):
             for j in range(8):
-                self[i][j] = Empty(0)
+                self.board[i][j] = Empty(0)
 
     def move(self, oldPos, newPos):
-        self[newPos] = self[oldPos]
-        self[oldPos] = Empty(0)
-        self[newPos].set_pos(newPos)
+        self.board[newPos] = self.board[oldPos]
+        self.board[oldPos] = Empty(0)
+        self.board[newPos].set_pos(newPos)
+
+    def is_mine(self, row, col):
+        return self.board[row][col].color == self.turn
+
+    def store_allowed(self):
+        self.allowed = self.selected.get_moves(self.board)
+
+    def set_selected(self, piece: Piece):
+        self.selected = piece
+
+    def piece_at(self, row, col):
+        return self.board[row][col]
+
+    def switch_turn(self):
+        self.turn *= -1
 
     def has_piece(self, row, col):
-        return isinstance(self[int(row)][int(col)], Piece)
-
-    def __getitem__(self, idx):
-        return self.board[idx]
-
-    def __setitem__(self, idx, value):
-        self.board[idx] = value
-
-    def __str__(self):
-        return np.array2string(self.board)
-
+        return isinstance(self.board[int(row)][int(col)], Piece)

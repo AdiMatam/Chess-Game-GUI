@@ -10,9 +10,11 @@ Pygame: Graphics platorm (pip install pygame)
 Numpy: 8x8 array used to manage board (pip install numpy)
 
 ## Usage
-Run `chs_game.py`
+Run `chs_main.py`
 
 ## Contents
+`chs_main.py:` Launches game.  
+
 `chs_game.py:` The 'frontend' / GUI. Handles clicks, moves pieces, shows allowed moves. 
 
 `chs_pieces.py:` Contains piece classes. Main 'Piece' interface initializes common attributes. Specific pieces (ie. Bishop) inherits from Piece and implements method to get 'legal moves'.  
