@@ -2,6 +2,8 @@ from pygame.image import load
 
 
 class Piece:
+    allpos = {1: set(), -1: set()}
+
     def __init__(self, color: int, coord: tuple):
         self.color = color
         self.coord = coord
@@ -11,12 +13,17 @@ class Piece:
 
         self.image = load(fr"images\{self.colorDict[color][0]}{self.type}.png".lower())
 
+        Piece.allpos[color].add(coord)
+
     # VOID
-    def set_pos(self, newCoord: tuple):
-        self.coord = newCoord
+    def set_pos(self, coord: tuple):
+        Piece.allpos[self.color].remove(self.coord)
+        self.coord = coord
+        Piece.allpos[self.color].add(self.coord)
 
     # BOOLEAN
-    def check_bound(self, x, y):
+    @staticmethod
+    def check_bound(x, y):
         if 0 <= x < 8 and 0 <= y < 8:
             return True
         return False
@@ -72,9 +79,9 @@ class Pawn(Piece):
                     allowed.add((loc))
 
         double = (row + (self.color * -2), col)  # coordinates for pawn-double-step
-
-        if board[double].color == 0 and board[nextRow][col].color == 0 and not self.moved:
-            allowed.add(double)
+        if 0 <= double[0] < 7:
+            if board[double].color == 0 and board[nextRow][col].color == 0 and not self.moved:
+                allowed.add(double)
 
         return allowed
 

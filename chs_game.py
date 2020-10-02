@@ -10,6 +10,7 @@ class Game(Board):
     def __init__(self, window, theme="Traditional", first="WHITE"):
         super().__init__(first)
         self.window = window
+
         self.theme = themes.get(theme.lower())
 
         self.reset_board()
@@ -17,10 +18,12 @@ class Game(Board):
 
     def square(self, x, y, size, color=None):
         if color:
-            pygame.draw.rect(self.window, color, (int(x), int(y), size, size))
+            return pygame.draw.rect(self.window, color, (int(x), int(y), size, size))
         else:
             rowcol = int(sum(self.to_rowcol(x, y)))
-            pygame.draw.rect(self.window, self.theme[rowcol % 2], (int(x), int(y), size, size))
+            return pygame.draw.rect(
+                self.window, self.theme[rowcol % 2], (int(x), int(y), size, size)
+            )
 
     def draw_board(self):
         for x in range(0, 800, 100):
@@ -83,6 +86,7 @@ class Game(Board):
             if self.selected.type == "Pawn" or self.selected.type == "King":
                 self.selected.updateMoved(True)
 
+            print(self.is_checking())
             self.switch_turn()
             self.clicked = False
 
@@ -109,12 +113,13 @@ class Game(Board):
         else:
             abslope = abs(ydiff / xdiff)
 
-        while x1 != x2 or y1 != y2:
-            x1 += dirx
-            y1 += diry * abslope
-            self.redraw_neighbors(x1, y1)
+        scale = max(1, self.get_distance(xdiff, ydiff) // 200)
+        while abs(x1 - x2) >= 2 or abs(y1 - y2) >= 2:
+            x1 += dirx * scale
+            y1 += diry * abslope * scale
+            mainRect = self.redraw_neighbors(x1, y1)
             self.draw_piece(piece, x1, y1)
-            pygame.display.update()
+            pygame.display.update(mainRect)
             pygame.time.delay(2)
 
     def get_distance(self, dx, dy):
@@ -124,31 +129,35 @@ class Game(Board):
     def redraw_neighbors(self, x, y):
         row, col = self.to_rowcol(x, y)
 
+        rects = []
+        nx = ny = 0
         for rShift in (-1, 0, 1):
             for cShift in (-1, 0, 1):
                 nRow = int(row + rShift)
                 nCol = int(col + cShift)
                 if 0 <= nRow <= 7 and 0 <= nCol <= 7:
-                    x, y = self.to_xy(nRow, nCol)
-                    self.square(x, y, BOX)
+                    nx, ny = self.to_xy(nRow, nCol)
+                    rects.append(self.square(nx, ny, BOX))
                     if self.has_piece(nRow, nCol) and self.selected.coord != (nRow, nCol):
-                        self.draw_piece(self.piece_at(nRow, nCol), x, y)
+                        self.draw_piece(self.piece_at(nRow, nCol), nx, ny)
+
+        return pygame.Rect(nx, ny, BOX, BOX).unionall(rects)
 
     def draw_allowed(self):
+        shrink = 10
         if len(self.allowed) > 0:
             for row, col in self.allowed:
                 x, y = self.to_xy(row, col)
-                shrink = 20
                 self.square(x + shrink, y + shrink, BOX - shrink * 2, self.theme[2])
                 if self.has_piece(row, col):
-                    self.draw_piece(self.piece_at(row, col), *self.to_xy(row, col))
+                    self.draw_piece(self.piece_at(row, col), x, y)
         else:
             print("No legal moves for selected piece")
 
     def reset_allowed(self):
         for row, col in self.allowed:
             x, y = self.to_xy(row, col)
-            self.square(*self.to_xy(row, col), BOX)
+            self.square(x, y, BOX)
             if self.has_piece(row, col):
                 self.draw_piece(self.piece_at(row, col), x, y)
 

@@ -5,3 +5,5 @@ HFBOX = BOX // 2
 IMGSIZE = 80
 RADIUS = 45
 
+BLACK = (0, 0, 0)
+

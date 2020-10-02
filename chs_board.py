@@ -12,6 +12,7 @@ class Board:
         self.selected = None
         self.allowed = set()
         self.captured = {1: [], -1: []}
+        self.update_poses()
 
     def setup(self):
         for idx in range(8):
@@ -33,6 +34,25 @@ class Board:
         self.board[oldPos] = Empty(0)
         self.board[newPos].set_pos(newPos)
 
+    def update_poses(self):
+        self.allpos = Piece.allpos
+
+    def is_checking(self):
+        self.update_poses()
+        myposes = self.allpos.get(self.turn)
+        oking = self.get_king(self.turn * -1)
+        legals = set()
+        for pos in myposes:
+            legals.update(self.piece_at(*pos).get_moves(self.board))
+        return oking.coord in legals
+
+    def get_king(self, turn=None) -> Piece:
+        if not turn:
+            turn = self.turn
+        for pos in self.allpos.get(turn):
+            if isinstance(self.board[pos], King) and self.board[pos].color == turn:
+                return self.board[pos]
+
     def is_mine(self, row, col):
         return self.board[row][col].color == self.turn
 
@@ -42,7 +62,7 @@ class Board:
     def set_selected(self, piece: Piece):
         self.selected = piece
 
-    def piece_at(self, row, col):
+    def piece_at(self, row, col) -> Piece:
         return self.board[row][col]
 
     def switch_turn(self):
