@@ -3,16 +3,21 @@ from chs_pieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn, Piece
 
 
 class Board:
-    player = {"WHITE": 1, "BLACK": -1}
-
-    def __init__(self, first: str):
+    def __init__(self):
         self.board = np.empty((8, 8), dtype=np.object)
-        self.turn = Board.player.get(first)
+        self.turn = 1
 
+        self.ready = False
         self.selected = None
         self.allowed = set()
         self.captured = {1: [], -1: []}
         self.update_positions()
+
+    def begin(self):
+        self.ready = True
+
+    def is_connected(self):
+        return self.ready
 
     def setup(self):
         for idx in range(8):

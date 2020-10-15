@@ -8,7 +8,7 @@ from chs_const import *
 
 class Game(Board):
     def __init__(self, window, theme="Traditional", first="WHITE"):
-        super().__init__(first)
+        super().__init__()
         self.window = window
 
         self.theme = themes.get(theme.lower())
