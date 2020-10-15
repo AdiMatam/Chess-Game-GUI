@@ -26,8 +26,8 @@ class Game(Board):
             )
 
     def draw_board(self):
-        for x in range(0, 800, 100):
-            for y in range(0, 800, 100):
+        for x in range(0, WIDTH, BOX):
+            for y in range(0, HEIGHT, BOX):
                 self.square(x, y, BOX)
 
     def reset_board(self):
@@ -86,7 +86,6 @@ class Game(Board):
             if self.selected.type == "Pawn" or self.selected.type == "King":
                 self.selected.updateMoved(True)
 
-            print(self.is_checking())
             self.switch_turn()
             self.clicked = False
 
@@ -122,7 +121,8 @@ class Game(Board):
             pygame.display.update(mainRect)
             pygame.time.delay(2)
 
-    def get_distance(self, dx, dy):
+    @staticmethod
+    def get_distance(dx, dy):
         dist = (dx ** 2 + dy ** 2) ** (1 / 2)
         return abs(dist)
 
@@ -176,9 +176,7 @@ win = pygame.display.set_mode((WIDTH, HEIGHT))
 game = Game(win)
 pygame.display.update()
 
-# VARS
 run = True
-#
 
 # MAINLOOP
 while run:
@@ -196,6 +194,6 @@ while run:
 
     if update:
         pygame.display.update()
-#
+
 
 pygame.quit()
