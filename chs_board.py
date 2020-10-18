@@ -77,3 +77,6 @@ class Board:
 
     def has_piece(self, row, col):
         return isinstance(self.board[int(row)][int(col)], Piece)
+
+    def __str__(self):
+        return np.array2string(self.board)

@@ -1,6 +1,3 @@
-from pygame.image import load
-
-
 class Piece:
     allpos = {1: set(), -1: set()}
 
@@ -11,7 +8,7 @@ class Piece:
 
         self.colorDict = {1: "White", -1: "Black"}
 
-        self.image = load(fr"images\{self.colorDict[color][0]}{self.type}.png".lower())
+        self.image = fr"images\{self.colorDict[color][0]}{self.type}.png".lower()
 
         Piece.allpos[color].add(coord)
 

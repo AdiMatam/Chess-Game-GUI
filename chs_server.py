@@ -9,31 +9,42 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.bind(ADDR)
 sock.listen()
 
-games = {}
+boards = {}
 idcount = 0
 
 
-def new_client(conn, player, gameid):
-    global idcount
-    conn.send(str(player).encode())
+def decode_pos(s: str):
+    return ((int(s[0]), int(s[1])), (int(s[2]), int(s[3])))
+
+
+def new_client(conn, player, boardId):
+    global idcount, boards
+    conn.send(str.encode(str(player)))
     while True:
-        if gameid in games:
-            game = games[gameid]
+        try:
             data = conn.recv(BUF).decode()
-            if data:
-                if data == "reset":
-                    game.setup()
-                elif data != "get":
-                    pass
-                conn.sendall(pickle.dumps(game))
+            if boardId in boards:
+                board = boards[boardId]
+                if not data:
+                    break
+                else:
+                    if data == "setup":
+                        board.setup()
+                    elif data != "get":
+                        pos1, pos2 = decode_pos(data)
+                        board.move(pos1, pos2)
+                    conn.sendall(pickle.dumps(board))
             else:
-                print("Connection Lost")
                 break
+        except:
+            break
 
-    if gameid in games:
-        del games[gameid]
-        print(f"GAME {gameid} CLOSING")
-
+    print("Lost connection")
+    try:
+        del boards[boardId]
+        print("Closing Game", boardId)
+    except:
+        pass
     idcount -= 1
     conn.close()
 
@@ -41,14 +52,15 @@ def new_client(conn, player, gameid):
 print("WAITING for connection")
 while True:
     conn, addr = sock.accept()
-    gameid = idcount // 2
+    print(f"<{addr}> connected")
+    boardId = idcount // 2
     idcount += 1
     if idcount % 2 == 1:
         player = 1
-        games[gameid] = Board()
-
+        boards[boardId] = Board()
     else:
         player = -1
-        games[gameid].begin()
+        boards[boardId].begin()
+        boards[boardId].setup()
 
-    Thread(target=new_client, args=(conn, player, gameid))
+    Thread(target=new_client, args=(conn, player, boardId)).start()

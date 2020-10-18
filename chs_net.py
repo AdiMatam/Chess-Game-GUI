@@ -6,13 +6,13 @@ from chs_const import ADDR, BUF
 class Network:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.player = self.connect()
+        self.client.connect(ADDR)
+        self.player = self.initial()
 
-    def connect(self):
+    def initial(self):
         try:
-            self.client.connect(ADDR)
             return int(self.client.recv(BUF).decode())
-        except:
+        except Exception as e:
             print("CONNECTION ERROR")
 
     def send(self, data: str):
