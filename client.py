@@ -1,9 +1,9 @@
 import socket
 import pickle
-from chs_const import ADDR, BUF
+from const import ADDR, BUF
 
 
-class Network:
+class Client:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect(ADDR)

@@ -1,5 +1,5 @@
 import numpy as np
-from chs_pieces import Rook, Knight, Bishop, Queen, King, Empty, Pawn, Piece
+from pieces import *
 
 
 class Board:

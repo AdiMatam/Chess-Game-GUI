@@ -1,9 +1,9 @@
+import pickle
 import socket
 from threading import Thread
-import pickle
-from chs_board import Board
-from chs_const import ADDR, BUF
 
+from board import Board
+from const import ADDR, BUF
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.bind(ADDR)
@@ -17,22 +17,21 @@ def decode_pos(s: str):
     return ((int(s[0]), int(s[1])), (int(s[2]), int(s[3])))
 
 
-def new_client(conn, player, boardId):
+def new_client(conn, player, boId):
     global idcount, boards
     conn.send(str.encode(str(player)))
     while True:
         try:
             data = conn.recv(BUF).decode()
-            if boardId in boards:
-                board = boards[boardId]
+            if boId in boards:
+                board = boards[boId]
                 if not data:
                     break
                 else:
                     if data == "setup":
                         board.setup()
                     elif data != "get":
-                        pos1, pos2 = decode_pos(data)
-                        board.move(pos1, pos2)
+                        board.move(*decode_pos(data))
                     conn.sendall(pickle.dumps(board))
             else:
                 break
@@ -41,8 +40,8 @@ def new_client(conn, player, boardId):
 
     print("Lost connection")
     try:
-        del boards[boardId]
-        print("Closing Game", boardId)
+        del boards[boId]
+        print("Closing Game", boId)
     except:
         pass
     idcount -= 1

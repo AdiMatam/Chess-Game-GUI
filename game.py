@@ -2,10 +2,10 @@ import pygame
 from pygame.locals import QUIT, MOUSEBUTTONDOWN
 from pygame.image import load
 
-from chs_const import *
-from chs_net import Network
+from const import *
+from client import Client
 
-net = Network()
+cli = Client()
 pygame.init()
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 theme = ((210, 180, 140), (102, 66, 41))
@@ -29,7 +29,7 @@ def draw_piece(win, piece, x, y):
 
 
 def redraw_window(board):
-    global win, net, theme
+    global win, cli, theme
     for row in range(8):
         for col in range(8):
             x, y = to_xy(row, col)
@@ -44,7 +44,7 @@ def encode_pos(tup1, tup2):
     return f"{tup1[0]}{tup1[1]}{tup2[0]}{tup2[1]}"
 
 
-bo = net.send("setup")
+bo = cli.send("setup")
 redraw_window(bo)
 
 run = True
@@ -61,10 +61,10 @@ while run:
                 pos = to_rowcol(*pygame.mouse.get_pos())
             else:
                 strpos = encode_pos(pos, to_rowcol(*pygame.mouse.get_pos()))
-                net.send(strpos)
+                cli.send(strpos)
             clicked = not clicked
 
-    redraw_window(net.send("get"))
+    redraw_window(cli.send("get"))
 
 
 pygame.quit()
