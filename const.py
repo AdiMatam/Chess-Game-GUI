@@ -9,3 +9,11 @@ BLACK = (0, 0, 0)
 
 ADDR = ("10.0.0.57", 8000)
 BUF = 4096
+
+
+def to_rowcol(x, y):
+    return (int(y // BOX), int(x // BOX))
+
+
+def to_xy(row, col):
+    return (int(col * BOX), int(row * BOX))

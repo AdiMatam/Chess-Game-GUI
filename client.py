@@ -7,12 +7,9 @@ class Client:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect(ADDR)
-        self.player = self.initial()
-
-    def initial(self):
         try:
-            return int(self.client.recv(BUF).decode())
-        except Exception as e:
+            self.player = int(self.client.recv(BUF).decode())
+        except:
             print("CONNECTION ERROR")
 
     def send(self, data: str):

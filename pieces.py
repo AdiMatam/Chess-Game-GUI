@@ -6,9 +6,10 @@ class Piece:
         self.coord = coord
         self.type = type(self).__name__
 
-        self.colorDict = {1: "White", -1: "Black"}
-
-        self.image = fr"images\{self.colorDict[color][0]}{self.type}.png".lower()
+        if self.color == 1:
+            self.image = f"w{self.type}".lower()
+        else:
+            self.image = f"b{self.type}".lower()
 
         Piece.allpos[color].add(coord)
 
@@ -21,9 +22,7 @@ class Piece:
     # BOOLEAN
     @staticmethod
     def check_bound(x, y):
-        if 0 <= x < 8 and 0 <= y < 8:
-            return True
-        return False
+        return 0 <= x < 8 and 0 <= y < 8
 
     # SET <TUPLE>
     def apply_muls(self, board, rowMul, colMul):
@@ -48,8 +47,8 @@ class Piece:
         return currentMoves
 
     # STR
-    def __str__(self):
-        return f"{self.colorDict[self.color]} {self.type} at {self.coord}"
+    # def __str__(self):
+    #     return f"{self.colorDict[self.color]} {self.type} at {self.coord}"
 
 
 class Pawn(Piece):
