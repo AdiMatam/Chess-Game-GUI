@@ -6,6 +6,8 @@ from const import ADDR, BUF
 class Client:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def connect(self):
         self.client.connect(ADDR)
         try:
             self.player = int(self.client.recv(BUF).decode())
