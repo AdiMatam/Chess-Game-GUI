@@ -26,19 +26,22 @@ class Board:
             for j in range(8):
                 self.board[i][j] = Empty(0)
 
-    def move(self, oldPos, newPos):
-        self.board[newPos] = self.board[oldPos]
-        self.board[oldPos] = Empty(0)
-        self.board[newPos].set_pos(newPos)
+    def move(self, row, col):
+        if (pos := (row, col)) in self.allowed:
+            oldPos = self.selected.coord
+            self.board[pos] = self.board[oldPos]
+            self.board[oldPos] = Empty(0)
+            self.board[pos].set_pos(pos)
+            self.selected = None
 
     def is_mine(self, row, col):
         return self.board[row][col].color == self.turn
 
-    def store_allowed(self):
-        self.allowed = self.selected.get_moves(self.board)
-
     def set_selected(self, piece: Piece):
         self.selected = piece
+
+    def store_allowed(self):
+        self.allowed = self.selected.get_moves(self.board)
 
     def piece_at(self, row, col) -> Piece:
         return self.board[row][col]

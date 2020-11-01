@@ -3,18 +3,17 @@ import platform
 from tkinter.constants import BOTH
 import pygame
 from pygame.locals import QUIT, MOUSEBUTTONDOWN
-from pygame.image import load
 from tkinter import Frame, Tk, TclError
 
 from const import *
-from client import Client
 from themes import ThemeMap
+from client import Client
 
 
-class Game:
+class Game(Client):
     def __init__(self, root, theme="traditional"):
-        # super().__init__()
-        # self.connect()
+        super().__init__()
+        self.connect()
         self.root = root
 
         self.gameFrame = Frame(root, width=800, height=800)
@@ -28,16 +27,16 @@ class Game:
         self.theme = ThemeMap.get(theme)
 
         self.images = {}
+        self.board = None
+
         self.store_images()
         self.draw_board()
-        # self.setup_board()
-
-        self.clicked = False
+        self.setup_board()
 
     def store_images(self):
         for file in os.listdir("images"):
             key = file[: file.index(".")]
-            self.images[key] = load(rf"images\{file}")
+            self.images[key] = pygame.image.load(rf"images\{file}")
 
     def square(self, x, y, size=BOX, color=None):
         x, y = int(x), int(y)
@@ -52,33 +51,31 @@ class Game:
             for y in range(0, 800, 100):
                 self.square(x, y)
 
-    # def setup_board(self):
-    #     board = self.get_board()
-    #     for row in range(8):
-    #         for col in range(8):
-    #             if board.has_piece(row, col):
-    #                 pce = board.piece_at(row, col)
-    #                 self.draw_piece(pce, *to_xy(*pce.coord))
+    def setup_board(self):
+        for row in range(8):
+            for col in range(8):
+                if self.board.has_piece(row, col):
+                    pce = self.board.piece_at(row, col)
+                    self.draw_piece(pce, *to_xy(*pce.coord))
 
-    # def draw_piece(self, piece, x, y):
-    #     offset = (BOX - IMGSIZE) // 2
-    #     self.win.blit(self.images.get(piece.image), (int(x + offset), int(y + offset)))
+    def draw_piece(self, piece, x, y):
+        offset = (BOX - IMGSIZE) // 2
+        self.win.blit(self.images.get(piece.image), (int(x + offset), int(y + offset)))
 
-    # def draw_allowed(self):
-    #     board = self.get_board()
-    #     for row, col in board.allowed:
-    #         x, y = to_xy(row, col)
-    #         cx, cy = x + HFBOX, y + HFBOX
-    #         if board.has_piece(row, col):
-    #             self.square(x, y, color=self.theme[2])
-    #             pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), 85)
-    #             self.draw_piece(board.selected, x, y)
-    #         else:
-    #             pygame.draw.circle(self.win, self.theme[2], (cx, cy), 30)
+    def draw_allowed(self):
+        for row, col in self.board.allowed:
+            x, y = to_xy(row, col)
+            cx, cy = x + HFBOX, y + HFBOX
+            if self.board.has_piece(row, col):
+                self.square(x, y, color=self.theme[2])
+                pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), 85)
+                self.draw_piece(self.board.selected, x, y)
+            else:
+                pygame.draw.circle(self.win, self.theme[2], (cx, cy), 30)
 
-    # def reset_allowed(self):
-    #     for row, col in self.get_board():
-    #         self.square(*to_xy(row, col))
+    def reset_allowed(self):
+        for row, col in self.board.allowed:
+            self.square(*to_xy(row, col))
 
     def RUN(self):
         run = True
@@ -88,14 +85,15 @@ class Game:
                     run = False
                 elif event.type == MOUSEBUTTONDOWN:
                     mouse = pygame.mouse.get_pos()
-                    # self.reset_allowed()
-                    # bo = self.get_board()
-                    # if not self.clicked:
-                    #     self.send("select")
-                    #     bo.set_selected(bo.piece_at(*to_rowcol(*mouse)))
-                    #     bo.store_allowed()
-                    # else:
-                    #     pass
+                    row, col = to_rowcol(*mouse)
+                    self.board = self.send("get")
+                    if self.board.selected is None or self.board.is_mine(row, col):
+                        self.reset_allowed()
+                        self.board = self.send(f"select,{row},{col}")
+                        self.draw_allowed()
+                    else:
+                        self.board = self.send(f"move,{row},{col}")
+                        self.reset_allowed()
             pygame.display.update()
             try:
                 self.root.update()
@@ -107,6 +105,7 @@ class Game:
 try:
     root = Tk()
     root.resizable(False, False)
+    root.title("Chess")
     game = Game(root)
     root.update_idletasks()
     game.RUN()

@@ -26,8 +26,16 @@ def new_client(conn, player, boId):
                 else:
                     if data == "reset":
                         board.setup()
-                    elif data != "get":
-                        pass
+                    elif "select" in data:
+                        split = data.split(",")
+                        row, col = int(split[1]), int(split[2])
+                        if board.is_mine(row, col):
+                            board.set_selected(board.piece_at(row, col))
+                            board.store_allowed()
+                    elif "move" in data:
+                        split = data.split(",")
+                        row, col = int(split[1]), int(split[2])
+                        board.move(row, col)
                     conn.sendall(pickle.dumps(board))
             else:
                 break
