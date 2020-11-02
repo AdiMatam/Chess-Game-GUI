@@ -15,6 +15,7 @@ idcount = 0
 
 def new_client(conn, player, boId):
     global idcount, boards
+    print("Starting client!")
     conn.send(str(player).encode())
     while True:
         try:

@@ -8,6 +8,8 @@ class Board:
         self.turn = 1
 
         self.selected = None
+        self.updateSquares = set()
+        self.updates = [None, False, False]
         self.allowed = set()
         self.captured = {1: [], -1: []}
 
@@ -26,13 +28,26 @@ class Board:
             for j in range(8):
                 self.board[i][j] = Empty(0)
 
+    def update_went(self, player):
+        self.updates[player] = True
+
+    def clear_went(self):
+        self.updates[1] = False
+        self.updates[2] = False
+
+    def is_updated(self):
+        return all(self.updates[1:])
+
     def move(self, row, col):
         if (pos := (row, col)) in self.allowed:
             oldPos = self.selected.coord
             self.board[pos] = self.board[oldPos]
             self.board[oldPos] = Empty(0)
             self.board[pos].set_pos(pos)
+
             self.selected = None
+            self.updateSquares.add(oldPos)
+            self.updateSquares.add(pos)
 
     def is_mine(self, row, col):
         return self.board[row][col].color == self.turn

@@ -6,11 +6,12 @@ from const import ADDR, BUF
 class Client:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.id = None
 
     def connect(self):
         self.client.connect(ADDR)
         try:
-            self.player = int(self.client.recv(BUF).decode())
+            self.id = int(self.client.recv(BUF).decode())
         except:
             print("CONNECTION ERROR")
 

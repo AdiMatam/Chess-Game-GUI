@@ -27,7 +27,7 @@ class Game(Client):
         self.theme = ThemeMap.get(theme)
 
         self.images = {}
-        self.board = None
+        self.board = self.send("get")
 
         self.store_images()
         self.draw_board()
@@ -77,6 +77,12 @@ class Game(Client):
         for row, col in self.board.allowed:
             self.square(*to_xy(row, col))
 
+    def update_square(self, row, col):
+        x, y = to_xy(row, col)
+        self.square(x, y)
+        if self.board.has_piece(row, col):
+            self.draw_piece(self.board.piece_at(row, col), x, y)
+
     def RUN(self):
         run = True
         while run:
@@ -94,6 +100,13 @@ class Game(Client):
                     else:
                         self.board = self.send(f"move,{row},{col}")
                         self.reset_allowed()
+            if self.board.selected is None:
+                for coord in self.board.updateSquares:
+                    self.update_square(*coord)
+                self.board = self.send(f"update,{self.id}")
+            if self.board.is_updated():
+                self.board.clear_went()
+                self.board.updateSquares.clear()
             pygame.display.update()
             try:
                 self.root.update()
