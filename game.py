@@ -14,6 +14,7 @@ class Game(Client):
     def __init__(self, root, theme="traditional"):
         super().__init__()
         self.connect()
+        print(self.id)
         self.root = root
 
         self.gameFrame = Frame(root, width=800, height=800)
@@ -68,7 +69,7 @@ class Game(Client):
             cx, cy = x + HFBOX, y + HFBOX
             if self.board.has_piece(row, col):
                 self.square(x, y, color=self.theme[2])
-                pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), 85)
+                pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), 48)
                 self.draw_piece(self.board.selected, x, y)
             else:
                 pygame.draw.circle(self.win, self.theme[2], (cx, cy), 30)
@@ -86,27 +87,28 @@ class Game(Client):
     def RUN(self):
         run = True
         while run:
+            self.board = self.send("get")
             for event in pygame.event.get():
                 if event.type == QUIT:
                     run = False
                 elif event.type == MOUSEBUTTONDOWN:
                     mouse = pygame.mouse.get_pos()
                     row, col = to_rowcol(*mouse)
-                    self.board = self.send("get")
-                    if self.board.selected is None or self.board.is_mine(row, col):
+                    if self.board.turn != self.id:
+                        break
+                    if self.board.is_mine(row, col):
                         self.reset_allowed()
                         self.board = self.send(f"select,{row},{col}")
                         self.draw_allowed()
                     else:
                         self.board = self.send(f"move,{row},{col}")
-                        self.reset_allowed()
-            if self.board.selected is None:
-                for coord in self.board.updateSquares:
-                    self.update_square(*coord)
-                self.board = self.send(f"update,{self.id}")
-            if self.board.is_updated():
-                self.board.clear_went()
-                self.board.updateSquares.clear()
+                        if self.board.selected is None:
+                            self.reset_allowed()
+
+            if self.board.pending_updates():
+                for row, col in self.board.updateSquares:
+                    self.update_square(row, col)
+                self.send(f"updated,{self.id}")
             pygame.display.update()
             try:
                 self.root.update()
@@ -126,3 +128,4 @@ except Exception as e:
     print(e)
 finally:
     pygame.quit()
+

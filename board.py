@@ -7,7 +7,7 @@ class Board:
         self.board = np.empty((8, 8), dtype=np.object)
         self.turn = 1
 
-        self.selected = None
+        self.selected = 0
         self.updateSquares = set()
         self.updates = [None, False, False]
         self.allowed = set()
@@ -30,13 +30,13 @@ class Board:
 
     def update_went(self, player):
         self.updates[player] = True
+        if self.updates[1] and self.updates[-1]:
+            self.updates[1] = False
+            self.updates[-1] = False
+            self.updateSquares.clear()
 
-    def clear_went(self):
-        self.updates[1] = False
-        self.updates[2] = False
-
-    def is_updated(self):
-        return all(self.updates[1:])
+    def pending_updates(self):
+        return len(self.updateSquares) > 0
 
     def move(self, row, col):
         if (pos := (row, col)) in self.allowed:

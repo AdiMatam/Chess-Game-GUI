@@ -25,18 +25,21 @@ def new_client(conn, player, boId):
                 if not data:
                     break
                 else:
-                    if data == "reset":
-                        board.setup()
-                    elif "select" in data:
+                    if "select" in data:
                         split = data.split(",")
                         row, col = int(split[1]), int(split[2])
-                        if board.is_mine(row, col):
-                            board.set_selected(board.piece_at(row, col))
-                            board.store_allowed()
+                        board.set_selected(board.piece_at(row, col))
+                        board.store_allowed()
                     elif "move" in data:
                         split = data.split(",")
                         row, col = int(split[1]), int(split[2])
                         board.move(row, col)
+                        if board.selected is None:
+                            # MOVE COMPLETED
+                            board.switch_turn()
+                    elif "updated" in data:
+                        player = int(data.split(",")[1])
+                        board.update_went(player)
                     conn.sendall(pickle.dumps(board))
             else:
                 break
@@ -62,8 +65,8 @@ while True:
     if idcount % 2 == 1:
         player = 1
         boards[boardId] = Board()
+        boards[boardId].setup()
     else:
         player = -1
-        boards[boardId].setup()
 
     Thread(target=new_client, args=(conn, player, boardId)).start()
