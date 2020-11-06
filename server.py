@@ -34,11 +34,9 @@ def new_client(conn, player, boId):
                         split = data.split(",")
                         row, col = int(split[1]), int(split[2])
                         board.move(row, col)
-                        if board.selected is None:
-                            # MOVE COMPLETED
-                            board.switch_turn()
                     elif "updated" in data:
                         player = int(data.split(",")[1])
+                        print(f"Player {player} - update token")
                         board.update_went(player)
                     conn.sendall(pickle.dumps(board))
             else:

@@ -1,3 +1,4 @@
+from board import Board
 import socket
 import pickle
 from const import ADDR, BUF
@@ -15,7 +16,7 @@ class Client:
         except:
             print("CONNECTION ERROR")
 
-    def send(self, data: str):
+    def send(self, data: str) -> Board:
         try:
             self.client.send(data.encode())
             return pickle.loads(self.client.recv(BUF))

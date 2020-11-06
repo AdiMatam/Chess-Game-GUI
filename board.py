@@ -7,9 +7,11 @@ class Board:
         self.board = np.empty((8, 8), dtype=np.object)
         self.turn = 1
 
-        self.selected = 0
+        self.selected = None
+        self.moved = False
         self.updateSquares = set()
         self.updates = [None, False, False]
+        # self.replies = [None, False, False]
         self.allowed = set()
         self.captured = {1: [], -1: []}
 
@@ -31,12 +33,13 @@ class Board:
     def update_went(self, player):
         self.updates[player] = True
         if self.updates[1] and self.updates[-1]:
-            self.updates[1] = False
-            self.updates[-1] = False
             self.updateSquares.clear()
+            self.moved = False
+            self.updates[-1] = False
+            self.updates[1] = False
 
-    def pending_updates(self):
-        return len(self.updateSquares) > 0
+    def pending_updates(self, player):
+        return not self.updates[player] and len(self.updateSquares) > 0
 
     def move(self, row, col):
         if (pos := (row, col)) in self.allowed:
@@ -45,9 +48,14 @@ class Board:
             self.board[oldPos] = Empty(0)
             self.board[pos].set_pos(pos)
 
+            if isinstance(self.board[pos], King) or isinstance(self.board[pos], Pawn):
+                self.board[pos].update_moved(True)
+
             self.selected = None
+            self.moved = True
             self.updateSquares.add(oldPos)
             self.updateSquares.add(pos)
+            self.switch_turn()
 
     def is_mine(self, row, col):
         return self.board[row][col].color == self.turn
@@ -56,6 +64,7 @@ class Board:
         self.selected = piece
 
     def store_allowed(self):
+        self.allowed.clear()
         self.allowed = self.selected.get_moves(self.board)
 
     def piece_at(self, row, col) -> Piece:
@@ -68,25 +77,31 @@ class Board:
         return isinstance(self.board[int(row)][int(col)], Piece)
 
     def __str__(self):
-        return np.array2string(self.board)
+        fullstr = ""
+        for row in self.board:
+            for piece in row:
+                fullstr += f" {str(piece)[:3]} "
+            fullstr += "\n"
+        return fullstr
 
-    # def update_positions(self):
-    #     self.allpos = Piece.allpos
 
-    # def get_checked(self):
-    #     self.update_positions()
-    #     myposes = self.allpos.get(self.turn)
-    #     oking = self.get_king(self.turn * -1)
-    #     legals = set()
-    #     for pos in myposes:
-    #         legals.update(self.piece_at(*pos).get_moves(self.board))
+# def update_positions(self):
+#     self.allpos = Piece.allpos
 
-    #     if oking.coord in legals:
-    #         return oking
+# def get_checked(self):
+#     self.update_positions()
+#     myposes = self.allpos.get(self.turn)
+#     oking = self.get_king(self.turn * -1)
+#     legals = set()
+#     for pos in myposes:
+#         legals.update(self.piece_at(*pos).get_moves(self.board))
 
-    # def get_king(self, turn=None) -> Piece:
-    #     if not turn:
-    #         turn = self.turn
-    #     for pos in self.allpos.get(turn):
-    #         if isinstance(self.board[pos], King) and self.board[pos].color == turn:
-    #             return self.board[pos]
+#     if oking.coord in legals:
+#         return oking
+
+# def get_king(self, turn=None) -> Piece:
+#     if not turn:
+#         turn = self.turn
+#     for pos in self.allpos.get(turn):
+#         if isinstance(self.board[pos], King) and self.board[pos].color == turn:
+#             return self.board[pos]

@@ -17,6 +17,8 @@ class Game(Client):
         print(self.id)
         self.root = root
 
+        root.title(f"Player {self.id}")
+
         self.gameFrame = Frame(root, width=800, height=800)
         self.gameFrame.pack(fill=BOTH)
         os.environ["SDL_WINDOWID"] = str(self.gameFrame.winfo_id())
@@ -70,13 +72,13 @@ class Game(Client):
             if self.board.has_piece(row, col):
                 self.square(x, y, color=self.theme[2])
                 pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), 48)
-                self.draw_piece(self.board.selected, x, y)
+                self.draw_piece(self.board.piece_at(row, col), x, y)
             else:
                 pygame.draw.circle(self.win, self.theme[2], (cx, cy), 30)
 
     def reset_allowed(self):
         for row, col in self.board.allowed:
-            self.square(*to_xy(row, col))
+            self.update_square(row, col)
 
     def update_square(self, row, col):
         x, y = to_xy(row, col)
@@ -84,7 +86,7 @@ class Game(Client):
         if self.board.has_piece(row, col):
             self.draw_piece(self.board.piece_at(row, col), x, y)
 
-    def RUN(self):
+    def __call__(self):
         run = True
         while run:
             self.board = self.send("get")
@@ -102,13 +104,12 @@ class Game(Client):
                         self.draw_allowed()
                     else:
                         self.board = self.send(f"move,{row},{col}")
-                        if self.board.selected is None:
+                        if self.board.moved:
                             self.reset_allowed()
-
-            if self.board.pending_updates():
+            if self.board.moved and self.board.pending_updates(self.id):
                 for row, col in self.board.updateSquares:
                     self.update_square(row, col)
-                self.send(f"updated,{self.id}")
+                self.board = self.send(f"updated,{self.id}")
             pygame.display.update()
             try:
                 self.root.update()
@@ -123,7 +124,7 @@ try:
     root.title("Chess")
     game = Game(root)
     root.update_idletasks()
-    game.RUN()
+    game()
 except Exception as e:
     print(e)
 finally:

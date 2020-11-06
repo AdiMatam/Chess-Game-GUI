@@ -47,8 +47,8 @@ class Piece:
         return currentMoves
 
     # STR
-    # def __str__(self):
-    #     return f"{self.colorDict[self.color]} {self.type} at {self.coord}"
+    def __str__(self):
+        return self.image
 
 
 class Pawn(Piece):
@@ -81,7 +81,7 @@ class Pawn(Piece):
 
         return allowed
 
-    def updateMoved(self, moved):
+    def update_moved(self, moved):
         self.moved = moved
 
 
@@ -175,10 +175,13 @@ class King(Piece):
 
         # CASTLE
 
-    def updateMoved(self, moved):
+    def update_moved(self, moved):
         self.moved = moved
 
 
 class Empty:
     def __init__(self, color: int):
         self.color = color
+
+    def __str__(self):
+        return "empty"
