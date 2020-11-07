@@ -14,11 +14,11 @@ class Game(Client):
     def __init__(self, root, theme="traditional"):
         super().__init__()
         self.connect()
-        print(self.id)
+
+        self.func = null if self.id == 1 else reflect
+
         self.root = root
-
         root.title(f"Player {self.id}")
-
         self.gameFrame = Frame(root, width=800, height=800)
         self.gameFrame.pack(fill=BOTH)
         os.environ["SDL_WINDOWID"] = str(self.gameFrame.winfo_id())
@@ -59,7 +59,8 @@ class Game(Client):
             for col in range(8):
                 if self.board.has_piece(row, col):
                     pce = self.board.piece_at(row, col)
-                    self.draw_piece(pce, *to_xy(*pce.coord))
+                    r, c = self.func(row, col)
+                    self.draw_piece(pce, *to_xy(r, c))
 
     def draw_piece(self, piece, x, y):
         offset = (BOX - IMGSIZE) // 2
@@ -67,11 +68,11 @@ class Game(Client):
 
     def draw_allowed(self):
         for row, col in self.board.allowed:
-            x, y = to_xy(row, col)
+            x, y = to_xy(*self.func(row, col))
             cx, cy = x + HFBOX, y + HFBOX
             if self.board.has_piece(row, col):
                 self.square(x, y, color=self.theme[2])
-                pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), 48)
+                pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), RADIUS)
                 self.draw_piece(self.board.piece_at(row, col), x, y)
             else:
                 pygame.draw.circle(self.win, self.theme[2], (cx, cy), 30)
@@ -81,7 +82,7 @@ class Game(Client):
             self.update_square(row, col)
 
     def update_square(self, row, col):
-        x, y = to_xy(row, col)
+        x, y = to_xy(*self.func(row, col))
         self.square(x, y)
         if self.board.has_piece(row, col):
             self.draw_piece(self.board.piece_at(row, col), x, y)
@@ -95,7 +96,7 @@ class Game(Client):
                     run = False
                 elif event.type == MOUSEBUTTONDOWN:
                     mouse = pygame.mouse.get_pos()
-                    row, col = to_rowcol(*mouse)
+                    row, col = self.func(*to_rowcol(*mouse))
                     if self.board.turn != self.id:
                         break
                     if self.board.is_mine(row, col):
