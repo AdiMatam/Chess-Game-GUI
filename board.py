@@ -11,7 +11,6 @@ class Board:
         self.moved = False
         self.updateSquares = set()
         self.updates = [None, False, False]
-        # self.replies = [None, False, False]
         self.allowed = set()
         self.captured = {1: [], -1: []}
 
@@ -77,12 +76,12 @@ class Board:
         return isinstance(self.board[int(row)][int(col)], Piece)
 
     def __str__(self):
-        fullstr = ""
+        strboard = []
         for row in self.board:
             for piece in row:
-                fullstr += f" {str(piece)[:3]} "
-            fullstr += "\n"
-        return fullstr
+                strboard.append(f" {str(piece)[:3]} ")
+            strboard.append("\n")
+        return "".join(strboard)
 
 
 # def update_positions(self):
