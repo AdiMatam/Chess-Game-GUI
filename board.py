@@ -9,7 +9,8 @@ class Board:
 
         self.selected = None
         self.moved = False
-        self.updateSquares = set()
+        self.start = None
+        self.dest = None
         self.updates = [None, False, False]
         self.allowed = set()
         self.captured = {1: [], -1: []}
@@ -32,13 +33,14 @@ class Board:
     def update_went(self, player):
         self.updates[player] = True
         if self.updates[1] and self.updates[-1]:
-            self.updateSquares.clear()
+            # self.updateSquares.clear()
             self.moved = False
             self.updates[-1] = False
             self.updates[1] = False
+            self.selected = None
 
-    def pending_updates(self, player):
-        return not self.updates[player] and len(self.updateSquares) > 0
+    def pending_update(self, player):
+        return not self.updates[player]
 
     def move(self, row, col):
         if (pos := (row, col)) in self.allowed:
@@ -50,10 +52,8 @@ class Board:
             if isinstance(self.board[pos], King) or isinstance(self.board[pos], Pawn):
                 self.board[pos].update_moved(True)
 
-            self.selected = None
             self.moved = True
-            self.updateSquares.add(oldPos)
-            self.updateSquares.add(pos)
+            self.dest = pos
             self.switch_turn()
 
     def is_mine(self, row, col):
@@ -61,6 +61,7 @@ class Board:
 
     def set_selected(self, piece: Piece):
         self.selected = piece
+        self.start = self.selected.coord
 
     def store_allowed(self):
         self.allowed.clear()
