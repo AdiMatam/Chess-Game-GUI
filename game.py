@@ -1,28 +1,30 @@
 import os
 import platform
+from tkinter import Frame, TclError, Tk
 from tkinter.constants import BOTH
-import pygame
-from pygame.locals import QUIT, MOUSEBUTTONDOWN
-from tkinter import Frame, Tk, TclError
 
-from const import *
-from themes import ThemeMap
+import pygame
+from pygame.locals import MOUSEBUTTONDOWN, QUIT
+
 from client import Client
+from const import *
 from logger import Logger
+from themes import ThemeMap
 
 
 class Game(Client):
     def __init__(self, root, theme="traditional"):
         super().__init__()
         self.connect()
-
         self.root = root
-        if self.id == -1:
-            self.logger = Logger(rf"logs\logP0.txt")
-        else:
-            self.logger = Logger(rf"logs\logP1.txt")
 
-        root.title(f"Player {self.id}")
+        if self.id == 1:
+            self.logger = Logger(r"logs\whitelog.txt")
+            self.root.title("WHITE PLAYER")
+        else:
+            self.logger = Logger(r"logs\blacklog.txt")
+            self.root.title("BLACK PLAYER")
+
         self.gameFrame = Frame(root, width=800, height=800)
         self.gameFrame.pack(fill=BOTH)
         os.environ["SDL_WINDOWID"] = str(self.gameFrame.winfo_id())
@@ -49,8 +51,8 @@ class Game(Client):
         if color:
             return pygame.draw.rect(self.win, color, (x, y, size, size))
         else:
-            row, col = to_rowcol(x, y)
-            return pygame.draw.rect(self.win, self.theme[(row + col) % 2], (x, y, size, size))
+            comb = sum(to_rowcol(x, y))
+            return pygame.draw.rect(self.win, self.theme[comb % 2], (x, y, size, size))
 
     def setup_board(self):
         for row in range(8):
@@ -92,10 +94,7 @@ class Game(Client):
         dirx = (xdiff) / max(1, abs(xdiff))
         diry = (ydiff) / max(1, abs(ydiff))
 
-        if xdiff == 0:
-            abslope = 1
-        else:
-            abslope = abs(ydiff / xdiff)
+        abslope = 1 if xdiff == 0 else abs(ydiff / xdiff)
 
         scale = max(1, self.get_distance(xdiff, ydiff) // 200)
         while abs(x1 - x2) >= 2 or abs(y1 - y2) >= 2:

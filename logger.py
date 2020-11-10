@@ -9,10 +9,9 @@ class Logger:
         return self.is_closed
 
     def close(self):
-        if self.closed:
-            pass
-        self.writer.close()
-        self.closed = True
+        if not self.closed:
+            self.writer.close()
+            self.closed = True
 
     def log(self, message: str):
         self.writer.write(message)
