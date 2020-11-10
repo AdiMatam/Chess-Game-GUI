@@ -33,7 +33,6 @@ class Board:
     def update_went(self, player):
         self.updates[player] = True
         if self.updates[1] and self.updates[-1]:
-            # self.updateSquares.clear()
             self.moved = False
             self.updates[-1] = False
             self.updates[1] = False

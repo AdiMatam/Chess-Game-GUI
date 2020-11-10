@@ -8,6 +8,7 @@ from tkinter import Frame, Tk, TclError
 from const import *
 from themes import ThemeMap
 from client import Client
+from logger import Logger
 
 
 class Game(Client):
@@ -15,9 +16,12 @@ class Game(Client):
         super().__init__()
         self.connect()
 
-        # self.func = null if self.id == 1 else reflect
-
         self.root = root
+        if self.id == -1:
+            self.logger = Logger(rf"logs\logP0.txt")
+        else:
+            self.logger = Logger(rf"logs\logP1.txt")
+
         root.title(f"Player {self.id}")
         self.gameFrame = Frame(root, width=800, height=800)
         self.gameFrame.pack(fill=BOTH)
@@ -59,7 +63,7 @@ class Game(Client):
 
     def draw_allowed(self):
         for row, col in self.board.allowed:
-            x, y = to_xy(row, col)
+            x, y = to_xy(row, col, self.id)
             cx, cy = x + HFBOX, y + HFBOX
             if self.board.has_piece(row, col):
                 self.square(x, y, color=self.theme[2])
@@ -73,14 +77,14 @@ class Game(Client):
             self.update_square(row, col)
 
     def update_square(self, row, col):
-        x, y = to_xy(row, col)
+        x, y = to_xy(row, col, self.id)
         self.square(x, y)
         if self.board.has_piece(row, col):
             self.draw_piece(self.board.piece_at(row, col), x, y)
 
     def draw_along_path(self, piece, fro: tuple, to: tuple):
-        x1, y1 = to_xy(*fro)
-        x2, y2 = to_xy(*to)
+        x1, y1 = to_xy(*fro, self.id)
+        x2, y2 = to_xy(*to, self.id)
 
         xdiff = x2 - x1
         ydiff = y2 - y1
@@ -103,7 +107,7 @@ class Game(Client):
             pygame.time.delay(2)
 
     def redraw_neighbors(self, x, y, dest: tuple):
-        row, col = to_rowcol(x, y)
+        row, col = to_rowcol(x, y, self.id)
         rects = []
         nx = ny = 0
         for rShift in (-1, 0, 1):
@@ -111,7 +115,7 @@ class Game(Client):
                 nRow = int(row + rShift)
                 nCol = int(col + cShift)
                 if 0 <= nRow <= 7 and 0 <= nCol <= 7:
-                    nx, ny = to_xy(nRow, nCol)
+                    nx, ny = to_xy(nRow, nCol, self.id)
                     rects.append(self.square(nx, ny, BOX))
                     if self.board.has_piece(nRow, nCol) and dest != (nRow, nCol):
                         self.draw_piece(self.board.piece_at(nRow, nCol), nx, ny)
@@ -132,7 +136,7 @@ class Game(Client):
                     run = False
                 elif event.type == MOUSEBUTTONDOWN:
                     mouse = pygame.mouse.get_pos()
-                    row, col = to_rowcol(*mouse)
+                    row, col = to_rowcol(mouse[0], mouse[1], self.id)
                     if self.board.turn != self.id:
                         break
                     if self.board.is_mine(row, col):
@@ -161,6 +165,7 @@ try:
     game = Game(root)
     root.update_idletasks()
     game()
+    game.logger.close()
 except Exception as e:
     print(e)
 finally:
