@@ -1,17 +1,17 @@
 IP = "10.0.0.58"
+WIDTH = HEIGHT = 800
 
 ### DONT CHANGE BELOW THIS ###
 
 ADDR = (IP, 10000)
 BUF = 4096
 
-
-WIDTH = 800
-HEIGHT = 800
 BOX = HEIGHT // 8
 HFBOX = BOX // 2
-IMGSIZE = 80
-RADIUS = 48
+IMGSIZE = HEIGHT // 10
+RADIUS = int(HFBOX * 0.96)
+
+FONT = lambda size: ("Calibri", size, "bold")
 
 
 def to_rowcol(x, y, player=1):

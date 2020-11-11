@@ -1,7 +1,5 @@
 import os
-import platform
-from tkinter import Frame, TclError, Tk
-from tkinter.constants import BOTH
+from tkinter import Button, Frame, TclError, Tk
 
 import pygame
 from pygame.locals import MOUSEBUTTONDOWN, QUIT
@@ -17,6 +15,7 @@ class Game(Client):
         super().__init__()
         self.connect()
         self.root = root
+        self.player = self.id
 
         if self.id == 1:
             self.logger = Logger(r"logs\whitelog.txt")
@@ -25,11 +24,9 @@ class Game(Client):
             self.logger = Logger(r"logs\blacklog.txt")
             self.root.title("BLACK PLAYER")
 
-        self.gameFrame = Frame(root, width=800, height=800)
-        self.gameFrame.pack(fill=BOTH)
+        self.setup_tk()
+
         os.environ["SDL_WINDOWID"] = str(self.gameFrame.winfo_id())
-        if platform.system == "Windows":
-            os.environ["SDL_VIDEODRIVER"] = "windib"
 
         pygame.init()
         self.win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -39,6 +36,18 @@ class Game(Client):
         self.board = self.send("get")
 
         self.store_images()
+        self.setup_board()
+
+    def setup_tk(self):
+        self.gameFrame = Frame(self.root, width=WIDTH, height=HEIGHT)
+        self.gameFrame.grid(row=0, column=0, columnspan=8, rowspan=8)
+        self.flipButton = Button(
+            self.root, text="Flip", bg="white", font=FONT(16), command=self.flip,
+        )
+        self.flipButton.grid(row=8, column=0, columnspan=8, sticky="we")
+
+    def flip(self):
+        self.player *= -1
         self.setup_board()
 
     def store_images(self):
@@ -65,28 +74,28 @@ class Game(Client):
 
     def draw_allowed(self):
         for row, col in self.board.allowed:
-            x, y = to_xy(row, col, self.id)
+            x, y = to_xy(row, col, self.player)
             cx, cy = x + HFBOX, y + HFBOX
             if self.board.has_piece(row, col):
                 self.square(x, y, color=self.theme[2])
                 pygame.draw.circle(self.win, self.theme[(row + col) % 2], (cx, cy), RADIUS)
                 self.draw_piece(self.board.piece_at(row, col), x, y)
             else:
-                pygame.draw.circle(self.win, self.theme[2], (cx, cy), 30)
+                pygame.draw.circle(self.win, self.theme[2], (cx, cy), int(HFBOX * 0.6))
 
     def reset_allowed(self):
         for row, col in self.board.allowed:
             self.update_square(row, col)
 
     def update_square(self, row, col):
-        x, y = to_xy(row, col, self.id)
+        x, y = to_xy(row, col, self.player)
         self.square(x, y)
         if self.board.has_piece(row, col):
             self.draw_piece(self.board.piece_at(row, col), x, y)
 
     def draw_along_path(self, piece, fro: tuple, to: tuple):
-        x1, y1 = to_xy(*fro, self.id)
-        x2, y2 = to_xy(*to, self.id)
+        x1, y1 = to_xy(*fro, self.player)
+        x2, y2 = to_xy(*to, self.player)
 
         xdiff = x2 - x1
         ydiff = y2 - y1
@@ -96,7 +105,7 @@ class Game(Client):
 
         abslope = 1 if xdiff == 0 else abs(ydiff / xdiff)
 
-        scale = max(1, self.get_distance(xdiff, ydiff) // 200)
+        scale = max(1, self.get_distance(xdiff, ydiff) // (BOX * 2))
         while abs(x1 - x2) >= 2 or abs(y1 - y2) >= 2:
             x1 += dirx * scale
             y1 += diry * abslope * scale
@@ -106,7 +115,7 @@ class Game(Client):
             pygame.time.delay(2)
 
     def redraw_neighbors(self, x, y, dest: tuple):
-        row, col = to_rowcol(x, y, self.id)
+        row, col = to_rowcol(x, y, self.player)
         rects = []
         nx = ny = 0
         for rShift in (-1, 0, 1):
@@ -114,7 +123,7 @@ class Game(Client):
                 nRow = int(row + rShift)
                 nCol = int(col + cShift)
                 if 0 <= nRow <= 7 and 0 <= nCol <= 7:
-                    nx, ny = to_xy(nRow, nCol, self.id)
+                    nx, ny = to_xy(nRow, nCol, self.player)
                     rects.append(self.square(nx, ny, BOX))
                     if self.board.has_piece(nRow, nCol) and dest != (nRow, nCol):
                         self.draw_piece(self.board.piece_at(nRow, nCol), nx, ny)
@@ -135,7 +144,7 @@ class Game(Client):
                     run = False
                 elif event.type == MOUSEBUTTONDOWN:
                     mouse = pygame.mouse.get_pos()
-                    row, col = to_rowcol(mouse[0], mouse[1], self.id)
+                    row, col = to_rowcol(mouse[0], mouse[1], self.player)
                     if self.board.turn != self.id:
                         break
                     if self.board.is_mine(row, col):

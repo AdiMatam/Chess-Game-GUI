@@ -5,9 +5,6 @@ class Logger:
         self.writer = open(filename, mode=mode)
         self.closed = False
 
-    def is_closed(self):
-        return self.is_closed
-
     def close(self):
         if not self.closed:
             self.writer.close()
