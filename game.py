@@ -35,7 +35,7 @@ class Game(Client):
         self.board = self.send("get")
 
         self.images = {}
-        resize()
+        resize(IMGSIZE)
         for file in os.listdir("images"):
             key = file[: file.index(".")]
             self.images[key] = pygame.image.load(rf"images\{file}")

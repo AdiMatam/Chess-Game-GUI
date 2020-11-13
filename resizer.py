@@ -1,12 +1,11 @@
 from PIL import Image
 import os
-from const import IMGSIZE
 
 
-def resize():
+def resize(size):
+    img = Image.open(r"images\bbishop.png")
+    if img.size[0] == size:
+        return
     for file in os.listdir("images"):
-        img = Image.open(fr"images\{file}")
-        if img.size[0] == IMGSIZE:
-            break
-        img.resize((IMGSIZE, IMGSIZE))
+        img = Image.open(fr"images\{file}").resize((size, size))
         img.save(fr"images\{file}")
