@@ -8,7 +8,6 @@ from client import Client
 from const import *
 from logger import Logger
 from themes import ThemeMap
-from resizer import resize
 
 
 class Game(Client):
@@ -35,7 +34,7 @@ class Game(Client):
         self.board = self.send("get")
 
         self.images = {}
-        resize(IMGSIZE)
+        resize()
         for file in os.listdir("images"):
             key = file[: file.index(".")]
             self.images[key] = pygame.image.load(rf"images\{file}")
