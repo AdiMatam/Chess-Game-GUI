@@ -1,5 +1,6 @@
 class Piece:
-    allpos = {1: set(), -1: set()}
+    # allpos = {1: set(), -1: set()}
+    kingpos = [0, None, None]
 
     def __init__(self, color: int, coord: tuple):
         self.color = color
@@ -11,13 +12,18 @@ class Piece:
         else:
             self.image = f"b{self.type}".lower()
 
-        Piece.allpos[color].add(coord)
+        if self.type == "King":
+            Piece.kingpos[color] = coord
+
+        # Piece.allpos[color].add(coord)
 
     # VOID
     def set_pos(self, coord: tuple):
-        Piece.allpos[self.color].remove(self.coord)
+        # Piece.allpos[self.color].remove(self.coord)
         self.coord = coord
-        Piece.allpos[self.color].add(self.coord)
+        if self.type == "King":
+            Piece.kingpos[self.color] = coord
+        # Piece.allpos[self.color].add(self.coord)
 
     # BOOLEAN
     @staticmethod
@@ -108,7 +114,7 @@ class Knight(Piece):
         allowed = set()
         row, col = self.coord
 
-        add = [2, 1]
+        add = (2, 1)
 
         for i in range(2):
             for r in (row + add[i], row - add[i]):

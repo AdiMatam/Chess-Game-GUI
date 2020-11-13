@@ -12,8 +12,10 @@ class Board:
         self.start = None
         self.dest = None
         self.updates = [None, False, False]
+        # self.checks = [None, False, False]
         self.allowed = set()
         self.captured = {1: [], -1: []}
+        # self.allpos = set()
 
     def setup(self):
         for idx in range(8):
@@ -53,6 +55,7 @@ class Board:
 
             self.moved = True
             self.dest = pos
+            # self.update_positions()
             self.switch_turn()
 
     def is_mine(self, row, col):
@@ -62,9 +65,14 @@ class Board:
         self.selected = piece
         self.start = self.selected.coord
 
+    # def update_positions(self):
+    #     self.allpos = Piece.allpos
+
     def store_allowed(self):
-        self.allowed.clear()
+        # self.self_check()
         self.allowed = self.selected.get_moves(self.board)
+        # if self.checks[self.turn]:
+        #     pass
 
     def piece_at(self, row, col) -> Piece:
         return self.board[row][col]
@@ -83,9 +91,6 @@ class Board:
             strboard.append("\n")
         return "".join(strboard)
 
-
-# def update_positions(self):
-#     self.allpos = Piece.allpos
 
 # def get_checked(self):
 #     self.update_positions()

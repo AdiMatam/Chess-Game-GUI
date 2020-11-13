@@ -10,12 +10,15 @@ BOX = HEIGHT // 8
 HFBOX = BOX // 2
 IMGSIZE = HEIGHT // 10
 RADIUS = int(HFBOX * 0.96)
+BUTFNT = HEIGHT // 50
 
 FONT = lambda size: ("Calibri", size, "bold")
 
 
 def to_rowcol(x, y, player=1):
-    row = int(y // BOX) if player == 1 else 7 - int(y // BOX)
+    row = int(y // BOX)
+    if player == -1:
+        row = 7 - row
     return (row, int(x // BOX))
 
 
