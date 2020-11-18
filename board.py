@@ -1,8 +1,6 @@
 import numpy as np
 from pieces import *
 
-fprint = lambda x: print(x, flush=True)
-
 
 class Board:
     def __init__(self):
@@ -17,7 +15,8 @@ class Board:
         self.allowed = set()
         self.captured = {1: [], -1: []}
 
-        self.checks = 0
+        # self.checks = 0
+        self.checks = {1: 0, -1: 0}
         self.pins = set()
         self.blockslots = set()
 
@@ -71,16 +70,20 @@ class Board:
         self.start = self.selected.coord
 
     def store_allowed(self):
+        self.allowed.clear()
         self.check_logic()
-        if self.checks >= 2 and self.selected.type == "King":
-            self.allowed = self.king_filter()
-        elif self.checks == 1:
-            if self.selected.type == "King":
+        if self.selected.coord not in self.pins:
+            if self.checks[self.turn] >= 2 and self.selected.type == "King":
                 self.allowed = self.king_filter()
+            elif self.checks[self.turn] == 1:
+                if self.selected.type == "King":
+                    self.allowed = self.king_filter()
+                else:
+                    self.allowed = self.selected.get_moves(self.board).intersection(
+                        self.blockslots
+                    )
             else:
-                self.allowed = self.selected.get_moves(self.board).intersection(self.blockslots)
-        else:
-            self.allowed = self.selected.get_moves(self.board)
+                self.allowed = self.selected.get_moves(self.board)
 
     def king_filter(self):
         kpos = Piece.kingpos[self.turn]
@@ -93,7 +96,8 @@ class Board:
         return kingmoves.difference(oppomoves)
 
     def check_logic(self):
-        self.checks = 0
+        self.checks[self.turn] = 0
+        self.pins.clear()
         self.blockslots.clear()
         krow, kcol = Piece.kingpos[self.turn]
         for rmul in range(-1, 2):
@@ -109,10 +113,14 @@ class Board:
                     if 0 <= r <= 7 and 0 <= c <= 7:
                         pce = self.piece_at(r, c)
                         if pce.color == self.turn * -1 and pce.type == "Knight":
-                            self.checks += 1
+                            self.checks[self.turn] += 1
 
     def step_away(self, row, col, rmul, cmul):
         step = 0
+        blockslot = set()
+        check = False
+        pinCount = 0
+        pin = None
         while True:
             step += 1
             nrow = row + (step * rmul)
@@ -120,10 +128,10 @@ class Board:
             if 0 <= nrow <= 7 and 0 <= ncol <= 7:
                 pce = self.piece_at(nrow, ncol)
                 if pce.color == 0:
-                    self.blockslots.add((nrow, ncol))
+                    blockslot.add((nrow, ncol))
                 elif pce.color == self.turn:
-                    # FIX PIN
-                    return
+                    pinCount += 1
+                    pin = (nrow, ncol)
                 else:
                     if (
                         pce.type == "Queen"
@@ -131,10 +139,19 @@ class Board:
                         or (pce.type == "Bishop" and abs(rmul) == abs(cmul))
                         or (pce.type == "Pawn" and abs(cmul) == 1 and nrow == row + pce.color)
                     ):
-                        self.checks += 1
-                        return
+                        self.checks[self.turn] += 1
+                        check = True
+                        break
             else:
-                return
+                break
+        if check:
+            if pinCount == 0:
+                self.blockslots.update(blockslot)
+            elif pinCount == 1:
+                self.checks[self.turn] -= 1
+                self.pins.add(pin)
+            else:
+                self.checks[self.turn] -= 1
 
     def piece_at(self, row, col) -> Piece:
         return self.board[row][col]
