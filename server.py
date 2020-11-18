@@ -36,12 +36,12 @@ def new_client(conn, player, boId):
                         board.move(row, col)
                     elif "updated" in data:
                         player = int(data.split(",")[1])
-                        print(f"Player {player} - update token")
+                        # print(f"Player {player} - update token")
                         board.update_went(player)
                     conn.sendall(pickle.dumps(board))
             else:
                 break
-        except:
+        except Exception as e:
             break
 
     print("Lost connection")

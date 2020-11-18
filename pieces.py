@@ -1,5 +1,5 @@
 class Piece:
-    # allpos = {1: set(), -1: set()}
+    allpos = [0, set(), set()]
     kingpos = [0, None, None]
 
     def __init__(self, color: int, coord: tuple):
@@ -15,15 +15,15 @@ class Piece:
         if self.type == "King":
             Piece.kingpos[color] = coord
 
-        # Piece.allpos[color].add(coord)
+        Piece.allpos[color].add(coord)
 
     # VOID
     def set_pos(self, coord: tuple):
-        # Piece.allpos[self.color].remove(self.coord)
+        Piece.allpos[self.color].remove(self.coord)
         self.coord = coord
+        Piece.allpos[self.color].add(self.coord)
         if self.type == "King":
             Piece.kingpos[self.color] = coord
-        # Piece.allpos[self.color].add(self.coord)
 
     # BOOLEAN
     @staticmethod
@@ -51,6 +51,9 @@ class Piece:
                 break
 
         return currentMoves
+
+    def get_moves(self, board) -> set:
+        raise NotImplementedError("abstract")
 
     # STR
     def __str__(self):

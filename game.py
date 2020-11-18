@@ -6,7 +6,6 @@ from pygame.locals import MOUSEBUTTONDOWN, QUIT
 
 from client import Client
 from const import *
-from logger import Logger
 from themes import ThemeMap
 
 
@@ -18,10 +17,8 @@ class Game(Client):
         self.view = self.id
 
         if self.id == 1:
-            self.logger = Logger(r"logs\whitelog.txt")
             self.root.title("WHITE PLAYER")
         else:
-            self.logger = Logger(r"logs\blacklog.txt")
             self.root.title("BLACK PLAYER")
 
         self.setup_tk()
@@ -45,7 +42,7 @@ class Game(Client):
         self.gameFrame = Frame(self.root, width=WIDTH, height=HEIGHT)
         self.gameFrame.grid(row=0, column=0, columnspan=8, rowspan=8)
         self.flipButton = Button(
-            self.root, text="Flip", bg="white", font=FONT(BUTFNT), command=self.flip,
+            self.root, text="Flip", bg="white", font=font(BUTFNT), command=self.flip,
         )
         self.flipButton.grid(row=8, column=0, columnspan=8, sticky="we")
 
@@ -58,7 +55,7 @@ class Game(Client):
         if color:
             return pygame.draw.rect(self.win, color, (x, y, size, size))
         else:
-            comb = sum(to_rowcol(x, y))
+            comb = sum(to_rowcol(x, y, self.view))
             return pygame.draw.rect(self.win, self.theme[comb % 2], (x, y, size, size))
 
     def update_square(self, row, col):
@@ -164,14 +161,8 @@ class Game(Client):
         pygame.quit()
 
 
-try:
-    root = Tk()
-    root.resizable(False, False)
-    game = Game(root)
-    root.update_idletasks()
-    game()
-    game.logger.close()
-except Exception as e:
-    print(e)
-finally:
-    pygame.quit()
+root = Tk()
+root.resizable(False, False)
+game = Game(root)
+root.update_idletasks()
+game()

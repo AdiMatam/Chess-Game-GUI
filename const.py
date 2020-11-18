@@ -16,7 +16,7 @@ IMGSIZE = HEIGHT // 10
 RADIUS = int(HFBOX * 0.96)
 BUTFNT = HEIGHT // 50
 
-FONT = lambda size: ("Calibri", size, "bold")
+font = lambda size: ("Calibri", size, "bold")
 
 
 def to_rowcol(x, y, player=1):
