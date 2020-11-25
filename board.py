@@ -10,17 +10,17 @@ class Board:
         self.selected = None
         self.moved = False
         self.start = None
-        self.dest = None
-        self.updates = [None, False, False]
+        self.end = None
         self.allowed = set()
+        self.updates = {1: False, -1: False}
         self.captured = {1: [], -1: []}
+        self.kpos = None
 
-        # self.checks = 0
         self.checks = {1: 0, -1: 0}
         self.pins = set()
         self.blockslots = set()
 
-    def setup(self):
+    def setup(self) -> None:
         for idx in range(8):
             self.board[1][idx] = Pawn(-1, (1, idx))
             self.board[6][idx] = Pawn(1, (6, idx))
@@ -35,7 +35,7 @@ class Board:
             for j in range(8):
                 self.board[i][j] = Empty(0)
 
-    def update_went(self, player):
+    def update_went(self, player) -> None:
         self.updates[player] = True
         if self.updates[1] and self.updates[-1]:
             self.moved = False
@@ -43,35 +43,41 @@ class Board:
             self.updates[1] = False
             self.selected = None
 
-    def pending_update(self, player):
+    def pending_update(self, player) -> bool:
         return not self.updates[player]
 
-    def move(self, row, col):
-        if (pos := (row, col)) in self.allowed:
+    def move(self, row, col) -> None:
+        if (newPos := (row, col)) in self.allowed:
             oldPos = self.selected.coord
             if self.has_piece(row, col):
-                self.captured[self.turn].append(self.board[pos])
-            self.board[pos] = self.board[oldPos]
-            self.board[oldPos] = Empty(0)
-            self.board[pos].set_pos(pos)
+                self.captured[self.turn].append(self.board[newPos])
+                self.board[newPos] = self.board[oldPos]
+                self.board[oldPos] = Empty(0)
+            else:
+                self.board[newPos], self.board[oldPos] = self.board[oldPos], self.board[newPos]
 
-            if isinstance(self.board[pos], King) or isinstance(self.board[pos], Pawn):
-                self.board[pos].update_moved(True)
+            self.board[newPos].set_pos(newPos)
+
+            if isinstance(self.board[newPos], King) or isinstance(self.board[newPos], Pawn):
+                self.board[newPos].update_moved(True)
 
             self.moved = True
-            self.dest = pos
+            self.end = newPos
             self.switch_turn()
+            self.check_logic()
 
-    def is_mine(self, row, col):
+    def is_checked(self):
+        return self.checks[self.turn] > 0
+
+    def is_mine(self, row, col) -> bool:
         return self.board[row][col].color == self.turn
 
-    def set_selected(self, piece: Piece):
+    def set_selected(self, piece: Piece) -> None:
         self.selected = piece
-        self.start = self.selected.coord
+        self.start = piece.coord
 
-    def store_allowed(self):
+    def store_allowed(self) -> None:
         self.allowed.clear()
-        self.check_logic()
         if self.selected.coord not in self.pins:
             if self.checks[self.turn] >= 2 and self.selected.type == "King":
                 self.allowed = self.king_filter()
@@ -79,27 +85,25 @@ class Board:
                 if self.selected.type == "King":
                     self.allowed = self.king_filter()
                 else:
-                    self.allowed = self.selected.get_moves(self.board).intersection(
-                        self.blockslots
-                    )
+                    self.allowed = self.selected.get_moves(self.board).intersection(self.blockslots)
             else:
                 self.allowed = self.selected.get_moves(self.board)
 
-    def king_filter(self):
-        kpos = Piece.kingpos[self.turn]
-        kingmoves = self.piece_at(*kpos).get_moves(self.board)
+    def king_filter(self) -> set:
+        kingmoves = self.piece_at(*self.kpos).get_moves(self.board)
         oppomoves = set()
-        for coord in Piece.allpos[self.turn * -1]:
+        for coord in Piece.allpos[-self.turn]:
             moves = self.piece_at(*coord).get_moves(self.board)
             oppomoves.update(moves)
         # RETURN WHAT KINGMOVES HAS THAT OPPOMOVES DOES NOT HAVE
         return kingmoves.difference(oppomoves)
 
-    def check_logic(self):
+    def check_logic(self) -> None:
         self.checks[self.turn] = 0
         self.pins.clear()
         self.blockslots.clear()
-        krow, kcol = Piece.kingpos[self.turn]
+        self.kpos = Piece.kingpos[self.turn]
+        krow, kcol = self.kpos
         for rmul in range(-1, 2):
             for cmul in range(-1, 2):
                 if rmul == 0 and cmul == 0:
@@ -115,7 +119,7 @@ class Board:
                         if pce.color == self.turn * -1 and pce.type == "Knight":
                             self.checks[self.turn] += 1
 
-    def step_away(self, row, col, rmul, cmul):
+    def step_away(self, row, col, rmul, cmul) -> None:
         step = 0
         blockslot = set()
         check = False
@@ -147,44 +151,24 @@ class Board:
         if check:
             if pinCount == 0:
                 self.blockslots.update(blockslot)
-            elif pinCount == 1:
-                self.checks[self.turn] -= 1
-                self.pins.add(pin)
             else:
                 self.checks[self.turn] -= 1
+                if pinCount == 1:
+                    self.pins.add(pin)
 
     def piece_at(self, row, col) -> Piece:
-        return self.board[row][col]
+        return self.board[int(row)][int(col)]
 
-    def switch_turn(self):
+    def switch_turn(self) -> None:
         self.turn *= -1
 
-    def has_piece(self, row, col):
-        return isinstance(self.board[int(row)][int(col)], Piece)
+    def has_piece(self, row, col) -> bool:
+        return isinstance(self.piece_at(row, col), Piece)
 
-    def __str__(self):
+    def __str__(self) -> str:
         strboard = []
         for row in self.board:
             for piece in row:
                 strboard.append(f" {str(piece)[:3]} ")
             strboard.append("\n")
         return "".join(strboard)
-
-
-# def get_checked(self):
-#     self.update_positions()
-#     myposes = self.allpos.get(self.turn)
-#     oking = self.get_king(self.turn * -1)
-#     legals = set()
-#     for pos in myposes:
-#         legals.update(self.piece_at(*pos).get_moves(self.board))
-
-#     if oking.coord in legals:
-#         return oking
-
-# def get_king(self, turn=None) -> Piece:
-#     if not turn:
-#         turn = self.turn
-#     for pos in self.allpos.get(turn):
-#         if isinstance(self.board[pos], King) and self.board[pos].color == turn:
-#             return self.board[pos]
