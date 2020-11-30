@@ -41,7 +41,8 @@ class Piece:
             newCol = col + (colMul * step)
 
             if self.check_bound(newRow, newCol):
-                if (color := board[newRow][newCol].color) != self.color:
+                color = board[newRow][newCol].color
+                if color != self.color:
                     currentMoves.add((newRow, newCol))
                     if color == self.color * -1:
                         break
