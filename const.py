@@ -1,4 +1,4 @@
-IP = " 10.0.0.233"
+IP = "10.0.0.233"
 WIDTH = HEIGHT = 640
 
 ### DONT CHANGE BELOW THIS ###
@@ -7,7 +7,7 @@ from PIL import Image
 import os
 
 
-ADDR = (IP, 10000)
+ADDR = (IP, 7500)
 BUF = 4096
 
 BOX = HEIGHT // 8

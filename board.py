@@ -47,7 +47,8 @@ class Board:
         return not self.updates[player]
 
     def move(self, row, col) -> None:
-        if (newPos := (row, col)) in self.allowed:
+        if (row, col) in self.allowed:
+            newPos = (row, col)
             oldPos = self.selected.coord
             if self.has_piece(row, col):
                 self.captured[self.turn].append(self.board[newPos])
