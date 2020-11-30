@@ -1,4 +1,4 @@
-IP = "10.0.0.58"
+IP = " 10.0.0.233"
 WIDTH = HEIGHT = 640
 
 ### DONT CHANGE BELOW THIS ###
